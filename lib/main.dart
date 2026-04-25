@@ -1,121 +1,136 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// Import logic and screens
+import 'providers/app_providers.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/portfolio_screen.dart';
+import 'screens/swap_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: KitePayApp()));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class KitePayApp extends StatelessWidget {
+  const KitePayApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'KitePay DApp',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0D1117),
+        primaryColor: const Color(0xFF58A6FF),
+        fontFamily: 'Inter',
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MainLayoutShell(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MainLayoutShell extends ConsumerStatefulWidget {
+  const MainLayoutShell({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  ConsumerState<MainLayoutShell> createState() => _MainLayoutShellState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MainLayoutShellState extends ConsumerState<MainLayoutShell> {
+  int _selectedIndex = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  final List<Widget> _screens = [
+    const DashboardScreen(),
+    const PortfolioScreen(),
+    const SwapScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final wallet = ref.watch(walletProvider);
+
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      body: Row(
+        children: [
+          // --- SIDEBAR ---
+          Container(
+            width: 260,
+            decoration: const BoxDecoration(
+              color: Color(0xFF161B22),
+              border: Border(right: BorderSide(color: Colors.white10, width: 1)),
             ),
-          ],
-        ),
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
+                const ListTile(
+                  leading: Icon(Icons.tsunami, color: Color(0xFF58A6FF), size: 32),
+                  title: Text('KitePay', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                ),
+                const SizedBox(height: 20),
+                _navItem(Icons.dashboard_rounded, "Dashboard", 0),
+                _navItem(Icons.account_balance_wallet_rounded, "Portfolio", 1),
+                _navItem(Icons.swap_horizontal_circle_rounded, "Swap", 2),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: _buildWalletStatusCard(wallet),
+                ),
+              ],
+            ),
+          ),
+
+          // --- MAIN CONTENT ---
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(40.0),
+              child: _screens[_selectedIndex],
+            ),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    );
+  }
+
+  Widget _navItem(IconData icon, String label, int index) {
+    bool isSelected = _selectedIndex == index;
+    return ListTile(
+      onTap: () => setState(() => _selectedIndex = index),
+      leading: Icon(icon, color: isSelected ? const Color(0xFF58A6FF) : Colors.white54),
+      title: Text(label, style: TextStyle(color: isSelected ? Colors.white : Colors.white54)),
+    );
+  }
+
+  Widget _buildWalletStatusCard(String? wallet) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF21262D),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        children: [
+          Text(wallet == null ? "Not Connected" : "Connected", 
+              style: const TextStyle(color: Colors.white54, fontSize: 12)),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF58A6FF),
+              foregroundColor: Colors.black,
+              minimumSize: const Size(double.infinity, 40),
+            ),
+            // ✅ NEW 2026 WAY (Call a method on the Notifier)
+onPressed: () {
+  if (wallet == null) {
+    ref.read(walletProvider.notifier).connect("0xKite...8822");
+  } else {
+    ref.read(walletProvider.notifier).disconnect();
+  }
+            },
+            child: Text(wallet == null ? "Connect" : "Disconnect"),
+          )
+        ],
       ),
     );
   }
