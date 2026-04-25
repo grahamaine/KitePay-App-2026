@@ -1,5 +1,11 @@
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
+library;
+
+class KiteWallet {
+  final String address;
+  final double balance;
+  KiteWallet({required this.address, required this.balance});
+}
+
+abstract class KitePayService {
+  Future<KiteWallet> connect();
 }
