@@ -14,6 +14,7 @@ dependencies: # ONLY ONE OF THESE
   flutter_html: ^3.0.0
   kitepay_sdk: # Ensure this is indented correctly under the first dependencies
     path: ./kitepay_sdk 
+  flutter_widget_from_html: ^0.17.2
 
 dev_dependencies:
   flutter_test:
