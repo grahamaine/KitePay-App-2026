@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
+import 'package:kitepay_app_2026/services/kite_health_service.dart'; // Ensure correct path
 import 'package:kitepay_app_2026/services/web3_service.dart';
 
 class SendScreen extends StatefulWidget {
@@ -14,14 +15,64 @@ class SendScreen extends StatefulWidget {
 class _SendScreenState extends State<SendScreen> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
-  final Web3Service _web3service = Web3Service(); // Warning cleared below
+
+  // Services
+  final Web3Service _web3service = Web3Service();
+  final KiteHealthService _healthService = KiteHealthService();
+
   bool _isSending = false;
 
   @override
   void initState() {
     super.initState();
-    // Silences 'unused_field' by referencing the service on load
-    dev.log("KitePay: Web3 Engine Ready.");
+    _web3service.initialize();
+    dev.log("KitePay: Web3 Engine and Health Monitor Ready.");
+  }
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    _amountController.dispose();
+    _healthService.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSend() async {
+    setState(() => _isSending = true);
+
+    try {
+      // 1. Pre-flight check: Ensure network isn't stuck
+      final metrics = await _healthService.healthStream.first;
+
+      if (metrics.status == KiteStatus.stuck ||
+          metrics.status == KiteStatus.offline) {
+        throw Exception(
+          "Kite Network is currently unresponsive. Please try again later.",
+        );
+      }
+
+      // Show the processing dialog (Stateful UI from your previous code)
+      _showTransactionStatus();
+
+      // 2. REAL TRANSACTION: Trigger the Kite Chain broadcast
+      final txHash = await _web3service.sendKite(
+        recipient: _addressController.text.trim(),
+        amount: double.parse(_amountController.text.trim()),
+      );
+
+      dev.log("Transaction Hash: $txHash");
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: ${e.toString()}"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
   }
 
   void _confirmSend() {
@@ -53,7 +104,7 @@ class _SendScreenState extends State<SendScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2), // Fixed Deprecation
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -73,8 +124,8 @@ class _SendScreenState extends State<SendScreen> {
                   ? "${address.substring(0, 6)}...${address.substring(address.length - 4)}"
                   : address,
             ),
-            _confirmRow("Amount", "$amount ETH"),
-            _confirmRow("Network Fee", "~ 0.0002 ETH"),
+            _confirmRow("Amount", "$amount KITE"),
+            _confirmRow("Network", "Kite Mainnet"),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -105,25 +156,18 @@ class _SendScreenState extends State<SendScreen> {
     );
   }
 
-  Future<void> _handleSend() async {
-    setState(() => _isSending = true);
-    _showTransactionStatus();
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isSending = false);
-  }
-
   void _showTransactionStatus() {
     bool isMined = false;
-
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setDialogState) {
+            // Simulated mining time - in a real app, you'd listen to a transaction stream
             Timer(const Duration(seconds: 4), () {
               if (context.mounted && !isMined) {
-                setState(() => isMined = true);
+                setDialogState(() => isMined = true);
               }
             });
 
@@ -208,21 +252,60 @@ class _SendScreenState extends State<SendScreen> {
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text("Send ETH", style: TextStyle(color: Colors.white)),
+        title: const Text("Send KITE", style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
+            // KITE HEALTH BADGE
+            StreamBuilder<KiteHealthMetrics>(
+              stream: _healthService.healthStream,
+              builder: (context, snapshot) {
+                final status = snapshot.data?.status ?? KiteStatus.healthy;
+                final color = status == KiteStatus.healthy
+                    ? Colors.greenAccent
+                    : status == KiteStatus.degraded
+                    ? Colors.orangeAccent
+                    : Colors.redAccent;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        status == KiteStatus.healthy
+                            ? "Kite Mainnet: Optimized"
+                            : "Kite Mainnet: High Latency",
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.05),
-                ), // Fixed Deprecation
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
               ),
               child: Column(
                 children: [
@@ -242,7 +325,7 @@ class _SendScreenState extends State<SendScreen> {
                     ),
                     style: const TextStyle(color: Colors.white),
                     decoration: _inputDecoration(
-                      "Amount (ETH)",
+                      "Amount (KITE)",
                       Icons.token_outlined,
                     ),
                   ),
@@ -286,7 +369,7 @@ class _SendScreenState extends State<SendScreen> {
       prefixIcon: Icon(icon, color: Colors.blueAccent),
       enabledBorder: UnderlineInputBorder(
         borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-      ), // Fixed Deprecation
+      ),
       focusedBorder: const UnderlineInputBorder(
         borderSide: BorderSide(color: Colors.blueAccent, width: 2),
       ),

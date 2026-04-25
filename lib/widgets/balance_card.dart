@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-// Ensure this import matches your project name and file location exactly
 import 'package:kitepay_app_2026/services/web3_service.dart';
 
 class BalanceCard extends StatelessWidget {
-  // Initialize the Web3Service to fetch blockchain data
-  final Web3Service web3Service = Web3Service();
+  final Web3Service _web3service = Web3Service();
+
+  // REPLACE THIS WITH YOUR ETH ADDRESS
+  final String walletAddress = "0xC47fA20D51F2b809c8837A2F83AF9B0747c3Ce2D";
 
   BalanceCard({super.key});
 
@@ -12,25 +13,25 @@ class BalanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF3B82F6), // Blue Accent
+            const Color(0xFF1E40AF), // Deep Blue
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2563EB), // Royal Blue
-            Color(0xFF7C3AED), // Deep Purple
-          ],
         ),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+            color: Colors.blueAccent.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -38,39 +39,35 @@ class BalanceCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "Current Balance",
+                "Total Balance",
                 style: TextStyle(
                   color: Colors.white70,
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  "Sepolia",
-                  style: TextStyle(color: Colors.white, fontSize: 10),
-                ),
+              Icon(
+                Icons.contactless_outlined,
+                color: Colors.white.withValues(alpha: 0.5),
               ),
             ],
           ),
           const SizedBox(height: 12),
 
-          // FutureBuilder connects the UI to your Web3Service logic
+          // FETCHING THE LIVE BALANCE
           FutureBuilder<String>(
-            future: web3Service.getBalance(),
+            // We call the service, then convert the double to a 4-decimal string
+            future: _web3service
+                .getBalance(walletAddress)
+                .then((v) => v.toStringAsFixed(4)),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Text(
-                  "Loading...",
-                  style: TextStyle(
+                return const SizedBox(
+                  height: 40,
+                  width: 40,
+                  child: CircularProgressIndicator(
                     color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+                    strokeWidth: 2,
                   ),
                 );
               }
@@ -78,29 +75,44 @@ class BalanceCard extends StatelessWidget {
               if (snapshot.hasError) {
                 return const Text(
                   "Error",
-                  style: TextStyle(color: Colors.white, fontSize: 32),
+                  style: TextStyle(color: Colors.redAccent, fontSize: 32),
                 );
               }
 
-              return Text(
-                "${snapshot.data ?? '0.0000'} ETH",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -1,
-                ),
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    snapshot.data ?? "0.0000",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 38,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "KITE",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               );
             },
           ),
 
-          const SizedBox(height: 20),
-          const Text(
-            "**** **** **** 2026",
+          const SizedBox(height: 24),
+          Text(
+            "${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}",
             style: TextStyle(
-              color: Colors.white54,
-              fontSize: 16,
-              letterSpacing: 2,
+              color: Colors.white.withValues(alpha: 0.6),
+              fontFamily: 'monospace',
+              fontSize: 14,
             ),
           ),
         ],
