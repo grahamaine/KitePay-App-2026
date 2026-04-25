@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:kitepay_app_2026/screens/send_screen.dart'; // Ensure this path is correct
 import 'package:kitepay_app_2026/widgets/balance_card.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -64,11 +65,20 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // 2. HTML Quick Actions
+            // 2. HTML Quick Actions with Navigation Logic
             HtmlWidget(
               _htmlQuickActions,
               onTapUrl: (url) {
                 dev.log("Action: $url");
+
+                if (url == "kitepay://send") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SendScreen()),
+                  );
+                }
+                // You can add kitepay://receive logic here later
+
                 return true;
               },
             ),
