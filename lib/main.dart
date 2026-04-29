@@ -14,11 +14,10 @@ class KitePayDashboard extends StatefulWidget {
 }
 
 class _KitePayDashboardState extends State<KitePayDashboard> {
-  // CONNECTION STATE
+  // CONNECTION & IDENTITY STATE
   bool isConnected = false;
   String passportStatus = "Passport: Not Linked";
-
-  // WALLET ADDRESS
+  final String myAgentId = "agent_019dd9ae";
   final String myWallet = "0xFFeC82F9830f70fD9c978E1264472B08EbB0115c";
 
   // HELPER TO SHORTEN ADDRESS
@@ -36,6 +35,7 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
         content:
             Text(isConnected ? "Kite Agent Connected!" : "Agent Disconnected"),
         duration: const Duration(seconds: 1),
+        backgroundColor: isConnected ? Colors.blueAccent : Colors.redAccent,
       ),
     );
   }
@@ -54,7 +54,6 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
               const SizedBox(height: 25),
               _buildGlassCard(),
               const SizedBox(height: 15),
-              // Integrated Policy Card
               _buildPolicyCard(),
               const SizedBox(height: 25),
               const Text("Quick Actions",
@@ -74,65 +73,112 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
     );
   }
 
-  // 1. Header with Passport Status and Shortened Address
+  // 1. Header with Identity Badge and Status
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(shortAddr(myWallet),
-                style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12,
-                    fontFamily: 'monospace')),
-            const Text("Alex Kite",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _togglePassport,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isConnected
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color:
-                          isConnected ? Colors.greenAccent : Colors.redAccent),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.shield_rounded,
-                        size: 14,
-                        color: isConnected
-                            ? Colors.greenAccent
-                            : Colors.redAccent),
-                    const SizedBox(width: 6),
-                    Text(passportStatus,
-                        style: TextStyle(
+            _buildAgentIdentity(), // Dynamic Status Badge
+            const CircleAvatar(
+                radius: 20,
+                backgroundColor: Color(0xFF1E1E1E),
+                child: Icon(Icons.bolt, color: Colors.blueAccent, size: 20)),
+          ],
+        ),
+        const SizedBox(height: 15),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(shortAddr(myWallet),
+                    style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                        fontFamily: 'monospace')),
+                const Text("Alex Kite",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: _togglePassport,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isConnected
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: isConnected
+                              ? Colors.greenAccent
+                              : Colors.redAccent),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.shield_rounded,
+                            size: 14,
                             color: isConnected
                                 ? Colors.greenAccent
-                                : Colors.redAccent,
-                            fontSize: 11)),
-                  ],
+                                : Colors.redAccent),
+                        const SizedBox(width: 6),
+                        Text(passportStatus,
+                            style: TextStyle(
+                                color: isConnected
+                                    ? Colors.greenAccent
+                                    : Colors.redAccent,
+                                fontSize: 11)),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
-        const CircleAvatar(
-            radius: 25,
-            backgroundColor: Color(0xFF1E1E1E),
-            child: Icon(Icons.bolt, color: Colors.blueAccent)),
       ],
+    );
+  }
+
+  // New Identity Status Badge
+  Widget _buildAgentIdentity() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: isConnected
+                ? Colors.greenAccent.withOpacity(0.3)
+                : Colors.white10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.bolt,
+              color: isConnected ? Colors.greenAccent : Colors.white38,
+              size: 16),
+          const SizedBox(width: 8),
+          Text(
+            isConnected ? "ACTIVE SESSION" : "OFFLINE",
+            style: TextStyle(
+              color: isConnected ? Colors.greenAccent : Colors.white38,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
