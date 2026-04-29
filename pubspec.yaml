@@ -36,6 +36,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+ flutter:
   assets:
     - .env
-    - assets/KitePay.jpg
+    - assets/KitePay.png 
+     # Change this to match the file name exactly
