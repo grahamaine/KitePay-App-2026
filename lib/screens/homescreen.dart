@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:kitepay_sdk/kitepay_sdk.dart';
 
 class KitePayHomeScreen extends StatefulWidget {
   const KitePayHomeScreen({super.key});
@@ -32,13 +33,22 @@ class _KitePayHomeScreenState extends State<KitePayHomeScreen> with SingleTicker
     super.dispose();
   }
 
+  /// Handles the "Sync" simulation
   void _handleSync() async {
+    // Prevent multiple clicks while syncing
+    if (isSyncing) return;
+
     setState(() => isSyncing = true);
+    
+    // Simulate network latency/Passport handshake
     await Future.delayed(const Duration(seconds: 2));
-    setState(() {
-      isSyncing = false;
-      isConnected = true;
-    });
+    
+    if (mounted) {
+      setState(() {
+        isSyncing = false;
+        isConnected = true;
+      });
+    }
   }
 
   @override
@@ -58,7 +68,10 @@ class _KitePayHomeScreenState extends State<KitePayHomeScreen> with SingleTicker
                 shape: BoxShape.circle,
                 color: Colors.blueAccent.withValues(alpha: 0.15),
               ),
-              child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100), child: Container()),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100), 
+                child: Container()
+              ),
             ),
           ),
           
@@ -77,7 +90,7 @@ class _KitePayHomeScreenState extends State<KitePayHomeScreen> with SingleTicker
                   _buildAgentSection(),
                   const SizedBox(height: 40),
                   _buildTransactionHistory(),
-                  const SizedBox(height: 100), // Space for floating button
+                  const SizedBox(height: 100), 
                 ],
               ),
             ),
@@ -97,7 +110,10 @@ class _KitePayHomeScreenState extends State<KitePayHomeScreen> with SingleTicker
           backgroundColor: Colors.white10,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
-            child: Image.asset('assets/KitePay_Dapp.png', errorBuilder: (c, e, s) => const Icon(Icons.account_balance_wallet, color: Colors.blueAccent)),
+            child: Image.asset(
+              'assets/KitePay_Dapp.png', 
+              errorBuilder: (c, e, s) => const Icon(Icons.account_balance_wallet, color: Colors.blueAccent)
+            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -350,7 +366,10 @@ class _KitePayHomeScreenState extends State<KitePayHomeScreen> with SingleTicker
               child: Center(
                 child: isSyncing 
                   ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text("SYNC WITH KITE PASSPORT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                  : Text(
+                      isConnected ? "PASSPORT CONNECTED" : "SYNC WITH KITE PASSPORT", 
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2)
+                    ),
               ),
             ),
           ),
