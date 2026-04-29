@@ -18,14 +18,12 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
     
-    // THE 2026 NAMESPACE FIX:
-    // This automatically fixes "Namespace not specified" errors in your Flutter plugins
-    afterEvaluate {
-        if (project.hasProperty("android")) {
-            val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
-            if (android.namespace == null) {
-                android.namespace = "com.kitepay.generated.${project.name.replace("-", "_")}"
-            }
+    // THE 2026 NAMESPACE FIX (Updated for Gradle 8.14)
+    // We apply this to the 'android' extension directly to avoid the evaluation error
+    plugins.withType<com.android.build.gradle.api.AndroidBasePlugin> {
+        val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
+        if (android.namespace == null) {
+            android.namespace = "com.kitepay.generated.${project.name.replace("-", "_")}"
         }
     }
 }
