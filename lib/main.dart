@@ -1,11 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
-// --- Placeholder for Kite/Turnkey SDK Imports ---
-// Ensure these packages are in your pubspec.yaml
-// import 'package:kite_sdk/kite_sdk.dart';
-// import 'package:turnkey_sdk/turnkey_sdk.dart';
+import 'services/kite_service.dart'; // Import the service we made above
 
 void main() {
   runApp(const KitePayApp());
@@ -17,43 +12,14 @@ class KitePayApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'KitePay 2026',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
       home: const HomeScreen(),
     );
-  }
-}
-
-class KitePayService {
-  late String _baseUrl;
-
-  // FIX: Define the KiteConfig method
-  void kiteConfig({required String baseUrl}) {
-    _baseUrl = baseUrl;
-    debugPrint("Kite configured with base URL: $_baseUrl");
-  }
-
-  // FIX: Define the KitePay method and link it to the Linux CLI
-  Future<void> runKitePayment(double amount) async {
-    debugPrint("Initiating payment of \$$amount...");
-
-    // This calls the 'kpass' CLI you installed in Ubuntu
-    // It uses 'wallet-send' which was one of the skills we installed
-    ProcessResult result = await Process.run('kpass', [
-      'wallet-send',
-      '--amount',
-      amount.toString(),
-      '--currency',
-      'USD',
-    ]);
-
-    if (result.exitCode == 0) {
-      debugPrint("✅ Payment Successful: ${result.stdout}");
-    } else {
-      debugPrint(
-        "❌ Payment Failed (Code ${result.exitCode}): ${result.stderr}",
-      );
-    }
   }
 }
 
@@ -65,35 +31,50 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final KitePayService _kiteService = KitePayService();
+  // Initialize our Linux-linked service
+  final KiteService _kiteService = KiteService();
 
   @override
   void initState() {
     super.initState();
-
-    // 1. Initialize Config
+    // Setup the service on startup
     _kiteService.kiteConfig(baseUrl: "https://api.agentpassport.ai");
+    _kiteService.checkPassportStatus();
 
-    // 2. FIX: Correct ApiKeyStamper syntax using a Map
-    // This addresses your 'not_enough_positional_arguments' error
-    final stamper = {
-      'apiPublicKey': 'pk_your_public_key_here',
-      'apiPrivateKey': 'sk_your_private_key_here',
+    // Fix for the ApiKeyStamper error: using a Map instead of named parameters
+    final stamperConfig = {
+      'apiPublicKey': 'pk_live_your_key_here',
+      'apiPrivateKey': 'sk_live_your_key_here',
     };
-
-    debugPrint("Stamper initialized with keys: ${stamper['apiPublicKey']}");
+    debugPrint("Security Stamper Ready: ${stamperConfig['apiPublicKey']}");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("KitePay Terminal")),
+      appBar: AppBar(
+        title: const Text("KitePay Linux Terminal"),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () => _kiteService.runKitePayment(10.0),
-          child: const Text(
-            r"Pay $10.00 via Kite Passport",
-          ), // Added 'r' for raw string
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.account_balance_wallet,
+              size: 80,
+              color: Colors.deepPurple,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.all(20),
+              ),
+              onPressed: () => _kiteService.runKitePayment(10.0),
+              // Use 'r' (raw string) to fix the $ identifier error
+              child: const Text(r"Pay $10.00 via Kite Passport"),
+            ),
+          ],
         ),
       ),
     );
