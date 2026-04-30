@@ -1,29 +1,30 @@
 name: kitepay_app_2026
-description: "A new Flutter project."
+description: "A futuristic AI-payment dashboard with Turnkey and KitePay integration."
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.11.5
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  
+  # --- STATE & LOGIC ---
   flutter_riverpod: ^3.3.1
   flutter_dotenv: ^6.0.1
-
-  # --- ADD THIS LINE ---
   http: ^1.2.1
-  
+
   # --- TURNKEY & CRYPTO ---
   turnkey_sdk_flutter: ^1.2.1
   turnkey_api_key_stamper: ^0.2.1
-  web3dart: ^2.7.3 
+  web3dart: ^2.7.3
 
-  # --- KITE PAY ---
+  # --- KITE PAY (LOCAL SDK) ---
+  # Ensure the folder "kitepay_sdk" is in your project root
   kitepay_sdk:
-    path: ./kitepay_sdk 
+    path: kitepay_sdk
 
   # --- UI & UTILS ---
   flutter_html: ^3.0.0
@@ -32,11 +33,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^3.0.0 # Standard for 2026
 
-# DO NOT INDENT THIS LINE
 flutter:
   uses-material-design: true
+
   assets:
     - .env
     - assets/KitePay_Dapp.png
