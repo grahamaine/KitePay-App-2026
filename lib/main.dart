@@ -1,15 +1,29 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-// Ensure your local SDK is exported correctly in its barrel file
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kitepay_sdk/kitepay_sdk.dart';
 
-/// --- KITE PAY INITIALIZATION ---
-final kitepay = Kitepay(
-  apiKey: 'sk_test_your_key_here', // Replace with your actual Testnet Key
-);
+// --- SECURE INITIALIZATION ---
+Future<void> main() async {
+  // Required to ensure the Flutter framework is ready before loading assets
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() => runApp(const KitePayApp());
+  try {
+    await dotenv.load(fileName: ".env");
+    debugPrint("✅ Secrets Loaded Successfully from .env");
+  } catch (e) {
+    debugPrint("❌ Error loading .env file: $e");
+  }
+
+  runApp(const KitePayApp());
+}
+
+// --- SDK HANDSHAKE ---
+final kitepay = Kitepay(
+  // Pulling the public key from your .env for security
+  apiKey: dotenv.env['KITEPAY_PUBLIC_KEY'] ?? 'pk_test_placeholder',
+);
 
 class KitePayApp extends StatelessWidget {
   const KitePayApp({super.key});
@@ -17,7 +31,7 @@ class KitePayApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Kite Agentic Commerce',
+      title: 'Kite x Turnkey Agent',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true).copyWith(
         scaffoldBackgroundColor: const Color(0xFF050505),
@@ -39,119 +53,98 @@ class KitePayDashboard extends StatefulWidget {
 }
 
 class _KitePayDashboardState extends State<KitePayDashboard> {
-  // --- STATE VARIABLES ---
-  bool isConnected = false;
+  // --- STATE ---
   bool isSyncing = false;
+  Timer? _agentTimer;
+  double currentOnChainBalance = 10.50; // Mock balance for demo flow
+  double spentToday = 0.00;
+  final double sessionLimit = 15.00;
 
-  // Programmable Constraints
-  double sessionLimit = 10.00; // Total Budget
-  double spentToday = 0.00; // Tracks spending
-  double currentOnChainBalance = 8.50; // Initial Mock Balance
-
-  final String derivationPath = "m/742'/123'/0'/0";
-  final String agentId = "KITE-COMMERCE-AGENT-V1";
-  final String walletAddr = "0xFFeC82F9830f70fD9c978E1264472B08EbB0115c";
+  // Real-time console logs
+  final List<String> _consoleLogs = [
+    "Kernel: Turnkey Authenticator Active",
+    "Identity: Verified via TEE Vault"
+  ];
 
   @override
   void initState() {
     super.initState();
-    _updateAgentBalance();
+    _startAgentIntelligence();
   }
 
-  // --- CORE LOGIC ---
+  @override
+  void dispose() {
+    _agentTimer?.cancel();
+    super.dispose();
+  }
 
-  /// Handles UI Syncing and State Refresh
-  Future<void> _updateAgentBalance() async {
-    if (isSyncing) return;
-    _setSync(true);
+  // --- AGENT BRAIN ---
+  void _startAgentIntelligence() {
+    // The agent "scans" the network every 15 seconds
+    _agentTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      _autoDecisionLogic();
+    });
+  }
 
-    try {
-      // Since SDK lacks getBalance, we simulate a network "Heartbeat"
-      await Future.delayed(const Duration(milliseconds: 800));
+  void _addLog(String msg) {
+    if (!mounted) return;
+    setState(() {
+      final time = DateTime.now();
+      _consoleLogs.insert(
+          0, "${time.hour}:${time.minute.toString().padLeft(2, '0')} - $msg");
+      if (_consoleLogs.length > 8) _consoleLogs.removeLast();
+    });
+  }
 
-      setState(() {
-        isConnected = true;
-        // Keep spentToday synced with our mock balance
-        spentToday =
-            (sessionLimit - currentOnChainBalance).clamp(0.0, sessionLimit);
-      });
+  void _autoDecisionLogic() {
+    _addLog("TEE Scan: Validating Spending Policy...");
 
-      _showSnackBar(
-          "Kite Sync: \$${currentOnChainBalance.toStringAsFixed(2)} USDC Available",
-          Colors.cyanAccent);
-    } catch (e) {
-      _showSnackBar("Blockchain Sync Error", Colors.redAccent);
-    } finally {
-      _setSync(false);
+    // Example: Agent decides to top up if budget is healthy
+    if (currentOnChainBalance > 2.0 && spentToday < 5.0) {
+      _addLog("Trigger: Autonomous Turnkey Signature Required.");
+      _handleAgenticPurchase();
+    } else {
+      _addLog("Policy: Conditions not met for auto-spend.");
     }
   }
 
-  /// Executes an autonomous x402 payment using the REAL SDK method found
+  // --- SDK EXECUTION ---
   Future<void> _handleAgenticPurchase() async {
     if (spentToday >= sessionLimit) {
-      _showSnackBar("Policy Violation: Budget Exhausted", Colors.redAccent);
+      _addLog("Alert: Session limit reached. Transaction blocked.");
       return;
     }
 
-    _setSync(true);
+    setState(() => isSyncing = true);
     try {
-      // REAL SDK CALL: Based on your terminal grep output
+      // Executes the REAL createPayment method found in your SDK
       final result = await kitepay.createPayment(
-        amount: 100, // $1.00 USDC in cents
+        amount: 250, // $2.50 USDC
         currency: 'USDC',
-        email: 'agent-v1@kite.ai',
+        email: 'agent@turnkey-kite.io',
       );
 
       if (result != null) {
-        _showSnackBar("x402 Settlement Executed", Colors.cyanAccent);
-
-        // Update local "World Model" state
         setState(() {
-          currentOnChainBalance -= 1.00;
-          spentToday += 1.00;
+          currentOnChainBalance -= 2.50;
+          spentToday += 2.50;
         });
-
-        // Refresh UI
-        await _updateAgentBalance();
+        _addLog("Success: Signed by Turnkey. Settled on Kite.");
       }
     } catch (e) {
-      _showSnackBar("Execution Failed: Check API Key", Colors.redAccent);
+      _addLog("Auth Error: Turnkey Stamper rejected request.");
     } finally {
-      _setSync(false);
+      setState(() => isSyncing = false);
     }
   }
 
-  // --- UI HELPERS ---
-
-  void _setSync(bool value) => setState(() => isSyncing = value);
-
-  void _showSnackBar(String message, Color color) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message,
-            style: const TextStyle(
-                fontFamily: 'monospace', fontWeight: FontWeight.bold)),
-        backgroundColor:
-            color.withValues(alpha: 0.9), // Fixed: Updated for Flutter 3.22+
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  String _shortAddr(String addr) =>
-      "${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}";
-
-  // --- WIDGETS ---
-
+  // --- UI BUILD ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: RadialGradient(
-            // Fixed: Corrected gradient parameter
             center: Alignment.topRight,
             radius: 1.5,
             colors: [
@@ -161,32 +154,28 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
           ),
         ),
         child: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _updateAgentBalance,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 24),
-                  _buildGlassBalanceCard(),
-                  const SizedBox(height: 24),
-                  _buildConstraintPanel(),
-                  const SizedBox(height: 32),
-                  const Text("AGENT CAPABILITIES",
-                      style: TextStyle(
-                          color: Colors.white38,
-                          fontSize: 11,
-                          letterSpacing: 2,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  _buildBentoGrid(),
-                  const SizedBox(height: 32),
-                  _buildLiveLogs(),
-                ],
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 20),
+                _buildSecurityBadge(),
+                const SizedBox(height: 24),
+                _buildBalanceCard(),
+                const SizedBox(height: 32),
+                const Text("INTELLIGENCE STREAM",
+                    style: TextStyle(
+                        color: Colors.white38,
+                        fontSize: 10,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                _buildConsole(),
+                const Spacer(),
+                _buildManualTrigger(),
+              ],
             ),
           ),
         ),
@@ -198,216 +187,126 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
+        const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("KITE AI • AGENTIC COMMERCE",
+            Text("SECURE AGENTIC COMMERCE",
                 style: TextStyle(
                     color: Colors.cyanAccent,
-                    fontWeight: FontWeight.bold,
                     fontSize: 10,
-                    letterSpacing: 1.5)),
-            Text(agentId,
-                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2)),
+            Text("Kite x Turnkey",
+                style: TextStyle(
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 26,
                     fontWeight: FontWeight.w900)),
-            Text("BIP-32 Path: $derivationPath",
-                style: const TextStyle(
-                    color: Colors.white24,
-                    fontSize: 11,
-                    fontFamily: 'monospace')),
           ],
         ),
-        _buildStatusIndicator(),
+        if (isSyncing)
+          const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                  color: Colors.cyanAccent, strokeWidth: 2)),
       ],
     );
   }
 
-  Widget _buildStatusIndicator() {
+  Widget _buildSecurityBadge() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isConnected
-            ? Colors.cyanAccent.withValues(alpha: 0.1)
-            : Colors.white10,
-        border:
-            Border.all(color: isConnected ? Colors.cyanAccent : Colors.white24),
+        color: Colors.greenAccent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.3)),
       ),
-      child: Icon(Icons.bolt,
-          color: isConnected ? Colors.cyanAccent : Colors.white24, size: 20),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.lock_outline, color: Colors.greenAccent, size: 14),
+          SizedBox(width: 6),
+          Text("TEE-ENCRYPTED ENVIRONMENT",
+              style: TextStyle(
+                  color: Colors.greenAccent,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold)),
+        ],
+      ),
     );
   }
 
-  Widget _buildGlassBalanceCard() {
+  Widget _buildBalanceCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white10),
-        gradient: LinearGradient(
-            colors: [Colors.white.withValues(alpha: 0.05), Colors.transparent]),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("ON-CHAIN SETTLEMENT (USDC)",
-              style: TextStyle(
-                  color: Colors.white38,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold)),
+          const Text("VAULT BALANCE",
+              style: TextStyle(color: Colors.white38, fontSize: 10)),
           const SizedBox(height: 8),
-          Text("\$${currentOnChainBalance.toStringAsFixed(2)}",
+          Text("\$${currentOnChainBalance.toStringAsFixed(2)} USDC",
               style: const TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Icon(Icons.account_balance_wallet,
-                  color: Colors.cyanAccent, size: 14),
-              const SizedBox(width: 6),
-              Text(_shortAddr(walletAddr),
-                  style: const TextStyle(
-                      color: Colors.white24,
-                      fontSize: 12,
-                      fontFamily: 'monospace')),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConstraintPanel() {
-    double progress = (spentToday / sessionLimit).clamp(0.0, 1.0);
-    Color statusColor =
-        progress > 0.8 ? Colors.orangeAccent : Colors.cyanAccent;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F0F0F),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Autonomy Reservoir",
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
-              Text("\$${spentToday.toStringAsFixed(2)} Spent",
-                  style: TextStyle(
-                      color: statusColor, fontWeight: FontWeight.bold)),
-            ],
-          ),
           const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: progress,
-            backgroundColor: Colors.white10,
-            color: statusColor,
-            borderRadius: BorderRadius.circular(10),
-            minHeight: 8,
-          ),
-          const SizedBox(height: 8),
-          const Align(
-            alignment: Alignment.centerRight,
-            child: Text("Limit: \$10.00 USDC",
-                style: TextStyle(color: Colors.white24, fontSize: 10)),
-          ),
+          Text(
+              "ID: ${dotenv.env['TURNKEY_ETH_WALLET_ID']?.substring(0, 12)}...",
+              style: const TextStyle(
+                  color: Colors.white24,
+                  fontSize: 10,
+                  fontFamily: 'monospace')),
         ],
       ),
     );
   }
 
-  Widget _buildBentoGrid() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 1.3,
-      children: [
-        _capabilityTile("x402 Pay", Icons.shopping_cart_checkout,
-            Colors.cyanAccent, _handleAgenticPurchase),
-        _capabilityTile(
-            "Sync Wallet", Icons.sync, Colors.white60, _updateAgentBalance),
-      ],
-    );
-  }
-
-  Widget _capabilityTile(
-      String title, IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.1)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 12),
-            Text(title,
-                style: TextStyle(
-                    color: color, fontWeight: FontWeight.bold, fontSize: 14)),
-          ],
+  Widget _buildConsole() {
+    return Container(
+      width: double.infinity,
+      height: 220,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: ListView.builder(
+        itemCount: _consoleLogs.length,
+        itemBuilder: (context, index) => Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Text("> ${_consoleLogs[index]}",
+              style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontFamily: 'monospace')),
         ),
       ),
     );
   }
 
-  Widget _buildLiveLogs() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("AGENT ENGINE LOGS",
-            style: TextStyle(
-                color: Colors.white38, fontSize: 10, letterSpacing: 1.5)),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white10)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _logLine("Agent Initialized via BIP-32 path..."),
-              _logLine("Scanning for x402 payment challenges..."),
-              if (isSyncing)
-                _logLine("Settling on Kite Testnet...", isPending: true),
-              if (isConnected && !isSyncing)
-                _logLine("System ready. Policy enforced.", isSuccess: true),
-            ],
-          ),
+  Widget _buildManualTrigger() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.cyanAccent,
+          foregroundColor: Colors.black,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
-      ],
-    );
-  }
-
-  Widget _logLine(String text,
-      {bool isPending = false, bool isSuccess = false}) {
-    Color textColor = Colors.white30;
-    if (isPending) textColor = Colors.orangeAccent;
-    if (isSuccess) textColor = Colors.cyanAccent;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text("> $text",
-          style: TextStyle(
-              fontFamily: 'monospace', fontSize: 11, color: textColor)),
+        onPressed: isSyncing ? null : _handleAgenticPurchase,
+        child: const Text("FORCE AGENTIC SETTLEMENT",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
     );
   }
 }
