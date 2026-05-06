@@ -1,4 +1,8 @@
-include: package:flutter_lints/flutter.yaml
+include: package:lints/recommended.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+linter:
+  rules:
+    # Add specific rules to enable or disable
+    prefer_single_quotes: true  # Enforce single quotes
+    avoid_print: true          # Warn you if you leave print() statements in production code
+    use_key_in_widget_constructors: false # Disable a specific rule if it bugs you
