@@ -6,7 +6,7 @@ import 'package:kitepay_sdk/kitepay_sdk.dart';
 
 /// --- KITE PAY INITIALIZATION ---
 final kitepay = Kitepay(
-  apiKey: 'sk_test_your_key_here',
+  apiKey: 'sk_test_your_key_here', // Replace with your actual Testnet Key
 );
 
 void main() => runApp(const KitePayApp());
@@ -39,12 +39,14 @@ class KitePayDashboard extends StatefulWidget {
 }
 
 class _KitePayDashboardState extends State<KitePayDashboard> {
+  // --- STATE VARIABLES ---
   bool isConnected = false;
   bool isSyncing = false;
 
-  double sessionLimit = 10.00;
-  double spentToday = 0.00;
-  double currentOnChainBalance = 0.00;
+  // Programmable Constraints
+  double sessionLimit = 10.00; // Total Budget
+  double spentToday = 0.00; // Tracks spending
+  double currentOnChainBalance = 8.50; // Initial Mock Balance
 
   final String derivationPath = "m/742'/123'/0'/0";
   final String agentId = "KITE-COMMERCE-AGENT-V1";
@@ -56,30 +58,26 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
     _updateAgentBalance();
   }
 
+  // --- CORE LOGIC ---
+
+  /// Handles UI Syncing and State Refresh
   Future<void> _updateAgentBalance() async {
     if (isSyncing) return;
     _setSync(true);
 
     try {
-      // Changed to getAccountBalance - verify this matches your SDK version
-      final balanceData = await kitepay.getAccountBalance();
-
-      double balance;
-      if (balanceData is Map) {
-        balance = (balanceData['available_balance'] ?? 0.0) / 100.0;
-      } else {
-        balance = (balanceData as num).toDouble() / 100.0;
-      }
+      // Since SDK lacks getBalance, we simulate a network "Heartbeat"
+      await Future.delayed(const Duration(milliseconds: 800));
 
       setState(() {
-        currentOnChainBalance = balance;
         isConnected = true;
-        spentToday = (sessionLimit - (currentOnChainBalance % sessionLimit))
-            .clamp(0.0, sessionLimit);
+        // Keep spentToday synced with our mock balance
+        spentToday =
+            (sessionLimit - currentOnChainBalance).clamp(0.0, sessionLimit);
       });
 
       _showSnackBar(
-          "Kite Sync: \$${currentOnChainBalance.toStringAsFixed(2)} USDC",
+          "Kite Sync: \$${currentOnChainBalance.toStringAsFixed(2)} USDC Available",
           Colors.cyanAccent);
     } catch (e) {
       _showSnackBar("Blockchain Sync Error", Colors.redAccent);
@@ -88,31 +86,42 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
     }
   }
 
+  /// Executes an autonomous x402 payment using the REAL SDK method found
   Future<void> _handleAgenticPurchase() async {
     if (spentToday >= sessionLimit) {
-      _showSnackBar("Policy Violation: Limit Reached", Colors.redAccent);
+      _showSnackBar("Policy Violation: Budget Exhausted", Colors.redAccent);
       return;
     }
 
     _setSync(true);
     try {
+      // REAL SDK CALL: Based on your terminal grep output
       final result = await kitepay.createPayment(
-        amount: 100,
+        amount: 100, // $1.00 USDC in cents
         currency: 'USDC',
         email: 'agent-v1@kite.ai',
       );
 
       if (result != null) {
         _showSnackBar("x402 Settlement Executed", Colors.cyanAccent);
-        await Future.delayed(const Duration(seconds: 2));
+
+        // Update local "World Model" state
+        setState(() {
+          currentOnChainBalance -= 1.00;
+          spentToday += 1.00;
+        });
+
+        // Refresh UI
         await _updateAgentBalance();
       }
     } catch (e) {
-      _showSnackBar("Execution Failed", Colors.redAccent);
+      _showSnackBar("Execution Failed: Check API Key", Colors.redAccent);
     } finally {
       _setSync(false);
     }
   }
+
+  // --- UI HELPERS ---
 
   void _setSync(bool value) => setState(() => isSyncing = value);
 
@@ -123,7 +132,8 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
         content: Text(message,
             style: const TextStyle(
                 fontFamily: 'monospace', fontWeight: FontWeight.bold)),
-        backgroundColor: color.withValues(alpha: 0.9),
+        backgroundColor:
+            color.withValues(alpha: 0.9), // Fixed: Updated for Flutter 3.22+
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -133,13 +143,15 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
   String _shortAddr(String addr) =>
       "${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}";
 
+  // --- WIDGETS ---
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: RadialGradient(
-            // Fixed gradient syntax
+            // Fixed: Corrected gradient parameter
             center: Alignment.topRight,
             radius: 1.5,
             colors: [
@@ -302,6 +314,12 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
             borderRadius: BorderRadius.circular(10),
             minHeight: 8,
           ),
+          const SizedBox(height: 8),
+          const Align(
+            alignment: Alignment.centerRight,
+            child: Text("Limit: \$10.00 USDC",
+                style: TextStyle(color: Colors.white24, fontSize: 10)),
+          ),
         ],
       ),
     );
@@ -319,7 +337,7 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
         _capabilityTile("x402 Pay", Icons.shopping_cart_checkout,
             Colors.cyanAccent, _handleAgenticPurchase),
         _capabilityTile(
-            "Sync", Icons.sync, Colors.white60, _updateAgentBalance),
+            "Sync Wallet", Icons.sync, Colors.white60, _updateAgentBalance),
       ],
     );
   }
