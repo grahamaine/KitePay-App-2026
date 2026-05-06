@@ -1,21 +1,32 @@
-# Use the official Flutter image
 FROM ghcr.io/cirruslabs/flutter:stable
 
-# Set workspace
+# Use root for the setup phase
+USER root
 WORKDIR /app
 
-# Step 1: Copy only pubspec to cache the 'pub get' layer
+# 1. Pre-create the directory structure
+RUN mkdir -p kitepay_sdk
+
+# 2. Copy the SDK's pubspec and source first
+# This allows the main app to 'link' to it during resolution
+COPY kitepay_sdk/pubspec.yaml ./kitepay_sdk/
+COPY kitepay_sdk/lib/ ./kitepay_sdk/lib/
+
+# 3. Copy the main app's pubspec
 COPY pubspec.yaml pubspec.lock ./
+
+# 4. Fix permissions so the 'flutter' user can access these files
+RUN chown -R flutter:flutter /app
+
+# 5. Switch to the flutter user to avoid the 'root' warning
+USER flutter
+
+# 6. Fetch dependencies
 RUN flutter pub get
 
-# Step 2: Copy the rest of the code
-COPY . .
+# 7. Copy the rest of the code
+COPY --chown=flutter:flutter . .
 
-# Step 3: Ensure the web SDK is downloaded
-RUN flutter precache --web
-
-# Expose the port Flutter will serve on
 EXPOSE 8080
 
-# Run as web-server
 CMD ["flutter", "run", "-d", "web-server", "--web-port", "8080", "--web-hostname", "0.0.0.0"]
