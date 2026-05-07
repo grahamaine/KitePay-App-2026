@@ -5,7 +5,7 @@ import 'package:kitepay_app_2026/main.dart'; // Ensure this matches your package
 void main() {
   testWidgets('Counter increment smoke test', (WidgetTester tester) async {
     // FIXED: Changed 'MyApp' to 'KitePayApp'
-    await tester.pumpWidget(const KitePayApp());
+    await tester.pumpWidget(const KitePayAgentApp());
 
     // Verify that our app starts (you can update these tests later)
     expect(find.byType(MaterialApp), findsOneWidget);
