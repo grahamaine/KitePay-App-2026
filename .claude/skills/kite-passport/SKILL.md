@@ -50,6 +50,7 @@ web search for product research when a direct product-search command exists.
 | See what agents or sessions exist | `manage-agents` |
 | View transaction history, verify a payment | `activity` |
 | Check if an order or payment went through | `activity` |
+| Update / upgrade kpass, check if the CLI is current | `upgrade-passport` |
 
 ## Common Task Patterns
 
@@ -108,6 +109,50 @@ If any skill returns exit code 6 (session policy violation), do NOT re-authentic
 — the user is already logged in. Instead, create a new session with corrected
 parameters using the `request-session` skill. Check the `error_code` field for
 the specific violation (e.g., `session_mode_forbidden`, `session_total_exceeded`).
+
+## Reading the JSON Envelope (Applies to Every Skill)
+
+Every `kpass <command> --output json` response shares a standard envelope:
+`_version`, `status`, `hint`, `next_command`, plus command-specific data fields.
+
+**One field every agent must know about:** an optional top-level
+`update_available` may appear when a newer kpass bundle is available on the
+install's channel:
+
+```json
+"update_available": {
+  "current_bundle":  21,
+  "latest_bundle":   22,
+  "channel":         "latest",
+  "install_command": "kpass upgrade"
+}
+```
+
+**What to do when you see it — auto-upgrade is the default:**
+
+1. **Wait for the user's current task to finish cleanly** (a payment to
+   complete, a checkout to settle, a session approval to come back). Don't
+   interrupt active flows. See `upgrade-passport` Rule 3 for the full list.
+2. **Then dispatch to the `upgrade-passport` skill, which will:**
+   - On POSIX (`install_command == "kpass upgrade"`): run `kpass upgrade
+     --output json` automatically, no permission prompt. Tell the user the
+     outcome after.
+   - On Windows (`install_command` starts with `irm`): show the install
+     command verbatim and tell the user to run it themselves. The agent must
+     NEVER auto-execute PowerShell `irm | iex`.
+3. **Do not block** the user's primary task on the upgrade. Report the
+   upgrade outcome together with the original task result.
+
+**Overrides:**
+
+- `KPASS_AUTO_UPGRADE=1` (or unset) → default; auto-upgrade enabled.
+- `KPASS_AUTO_UPGRADE=0` → auto-upgrade disabled. Detection still happens;
+  the agent surfaces the update info and asks the user before applying.
+- `KPASS_NO_UPDATE_CHECK=1` or `CI=1` → detection itself is suppressed; the
+  field won't appear, so the auto-upgrade flow never triggers.
+
+`install_command` is already platform-correct: you do not need to detect the
+platform yourself. Treat omission of the field as "no action needed."
 
 ## Rules
 

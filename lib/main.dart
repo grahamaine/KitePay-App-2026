@@ -1,29 +1,18 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:kitepay_sdk/kitepay_sdk.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// --- SECURE INITIALIZATION ---
+import 'providers/agent_provider.dart';
+
 Future<void> main() async {
-  // Required to ensure the Flutter framework is ready before loading assets
   WidgetsFlutterBinding.ensureInitialized();
-
   try {
     await dotenv.load(fileName: ".env");
-    debugPrint("✅ Secrets Loaded Successfully from .env");
   } catch (e) {
-    debugPrint("❌ Error loading .env file: $e");
+    debugPrint("System Notice: .env file failed to load: $e");
   }
-
-  runApp(const KitePayApp());
+  runApp(const ProviderScope(child: KitePayApp()));
 }
-
-// --- SDK HANDSHAKE ---
-final kitepay = Kitepay(
-  // Pulling the public key from your .env for security
-  apiKey: dotenv.env['KITEPAY_PUBLIC_KEY'] ?? 'pk_test_placeholder',
-);
 
 class KitePayApp extends StatelessWidget {
   const KitePayApp({super.key});
@@ -34,147 +23,57 @@ class KitePayApp extends StatelessWidget {
       title: 'Kite x Turnkey Agent',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true).copyWith(
-        scaffoldBackgroundColor: const Color(0xFF050505),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.cyanAccent,
-          brightness: Brightness.dark,
-        ),
+        scaffoldBackgroundColor: const Color(0xFF030305),
       ),
       home: const KitePayDashboard(),
     );
   }
 }
 
-class KitePayDashboard extends StatefulWidget {
+class KitePayDashboard extends ConsumerWidget {
   const KitePayDashboard({super.key});
 
   @override
-  State<KitePayDashboard> createState() => _KitePayDashboardState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final agent = ref.watch(agentProvider);
 
-class _KitePayDashboardState extends State<KitePayDashboard> {
-  // --- STATE ---
-  bool isSyncing = false;
-  Timer? _agentTimer;
-  double currentOnChainBalance = 10.50; // Mock balance for demo flow
-  double spentToday = 0.00;
-  final double sessionLimit = 15.00;
-
-  // Real-time console logs
-  final List<String> _consoleLogs = [
-    "Kernel: Turnkey Authenticator Active",
-    "Identity: Verified via TEE Vault"
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _startAgentIntelligence();
-  }
-
-  @override
-  void dispose() {
-    _agentTimer?.cancel();
-    super.dispose();
-  }
-
-  // --- AGENT BRAIN ---
-  void _startAgentIntelligence() {
-    // The agent "scans" the network every 15 seconds
-    _agentTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
-      _autoDecisionLogic();
-    });
-  }
-
-  void _addLog(String msg) {
-    if (!mounted) return;
-    setState(() {
-      final time = DateTime.now();
-      _consoleLogs.insert(
-          0, "${time.hour}:${time.minute.toString().padLeft(2, '0')} - $msg");
-      if (_consoleLogs.length > 8) _consoleLogs.removeLast();
-    });
-  }
-
-  void _autoDecisionLogic() {
-    _addLog("TEE Scan: Validating Spending Policy...");
-
-    // Example: Agent decides to top up if budget is healthy
-    if (currentOnChainBalance > 2.0 && spentToday < 5.0) {
-      _addLog("Trigger: Autonomous Turnkey Signature Required.");
-      _handleAgenticPurchase();
-    } else {
-      _addLog("Policy: Conditions not met for auto-spend.");
-    }
-  }
-
-  // --- SDK EXECUTION ---
-  Future<void> _handleAgenticPurchase() async {
-    if (spentToday >= sessionLimit) {
-      _addLog("Alert: Session limit reached. Transaction blocked.");
-      return;
-    }
-
-    setState(() => isSyncing = true);
-    try {
-      // Executes the REAL createPayment method found in your SDK
-      final result = await kitepay.createPayment(
-        amount: 250, // $2.50 USDC
-        currency: 'USDC',
-        email: 'agent@turnkey-kite.io',
-      );
-
-      if (result != null) {
-        setState(() {
-          currentOnChainBalance -= 2.50;
-          spentToday += 2.50;
-        });
-        _addLog("Success: Signed by Turnkey. Settled on Kite.");
-      }
-    } catch (e) {
-      _addLog("Auth Error: Turnkey Stamper rejected request.");
-    } finally {
-      setState(() => isSyncing = false);
-    }
-  }
-
-  // --- UI BUILD ---
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: RadialGradient(
             center: Alignment.topRight,
-            radius: 1.5,
+            radius: 1.2,
             colors: [
-              Colors.cyanAccent.withValues(alpha: 0.05),
-              Colors.transparent
+              Colors.cyanAccent.withValues(alpha: 0.15),
+              const Color(0xFF030305),
             ],
           ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
-                const SizedBox(height: 20),
-                _buildSecurityBadge(),
+                _buildHeader(agent),
                 const SizedBox(height: 24),
-                _buildBalanceCard(),
-                const SizedBox(height: 32),
-                const Text("INTELLIGENCE STREAM",
-                    style: TextStyle(
-                        color: Colors.white38,
-                        fontSize: 10,
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                _buildConsole(),
-                const Spacer(),
-                _buildManualTrigger(),
+                _buildSecurityBadge(agent),
+                const SizedBox(height: 24),
+                _buildBalanceVault(agent),
+                const SizedBox(height: 36),
+                const Text(
+                  "KITE AI INTELLIGENCE STREAM",
+                  style: TextStyle(
+                      color: Colors.white38,
+                      fontSize: 11,
+                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 16),
+                Expanded(child: _buildTerminalConsole(agent)),
+                const SizedBox(height: 24),
+                _buildActionPanel(ref, agent),
               ],
             ),
           ),
@@ -183,129 +82,145 @@ class _KitePayDashboardState extends State<KitePayDashboard> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AgentState agent) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("SECURE AGENTIC COMMERCE",
+            Text("AUTONOMOUS INFRASTRUCTURE",
                 style: TextStyle(
                     color: Colors.cyanAccent,
                     fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2)),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.5)),
+            SizedBox(height: 4),
             Text("Kite x Turnkey",
                 style: TextStyle(
                     color: Colors.white,
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: FontWeight.w900)),
           ],
         ),
-        if (isSyncing)
+        if (agent.isRunning) ...[
           const SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(
                   color: Colors.cyanAccent, strokeWidth: 2)),
+        ],
       ],
     );
   }
 
-  Widget _buildSecurityBadge() {
+  Widget _buildSecurityBadge(AgentState agent) {
+    final color = agent.isRunning ? Colors.cyanAccent : Colors.greenAccent;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.greenAccent.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.lock_outline, color: Colors.greenAccent, size: 14),
-          SizedBox(width: 6),
-          Text("TEE-ENCRYPTED ENVIRONMENT",
-              style: TextStyle(
-                  color: Colors.greenAccent,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold)),
+          Icon(Icons.shield_outlined, color: color, size: 16),
+          const SizedBox(width: 8),
+          Text(
+            agent.isRunning ? "AGENT: ACTIVE" : "IDENTITY: TEE-VERIFIED",
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBalanceCard() {
+  Widget _buildBalanceVault(AgentState agent) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("VAULT BALANCE",
-              style: TextStyle(color: Colors.white38, fontSize: 10)),
-          const SizedBox(height: 8),
-          Text("\$${currentOnChainBalance.toStringAsFixed(2)} USDC",
-              style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
+          const Text("AGENT VAULT BALANCE",
+              style: TextStyle(color: Colors.white38, fontSize: 11)),
           const SizedBox(height: 12),
           Text(
-              "ID: ${dotenv.env['TURNKEY_ETH_WALLET_ID']?.substring(0, 12)}...",
-              style: const TextStyle(
-                  color: Colors.white24,
-                  fontSize: 10,
-                  fontFamily: 'monospace')),
+            "\$${agent.balance.toStringAsFixed(2)} USDC",
+            style: const TextStyle(
+                fontSize: 42, fontWeight: FontWeight.w900, color: Colors.white),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildConsole() {
+  Widget _buildTerminalConsole(AgentState agent) {
     return Container(
       width: double.infinity,
-      height: 220,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: const Color(0xFF0A0A0E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: ListView.builder(
-        itemCount: _consoleLogs.length,
-        itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.only(bottom: 10.0),
-          child: Text("> ${_consoleLogs[index]}",
-              style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontFamily: 'monospace')),
-        ),
+        itemCount: agent.logs.length,
+        itemBuilder: (context, index) {
+          final log = agent.logs[index];
+          Color logColor = Colors.white70;
+
+          if (log.contains("Success") || log.contains("Settled")) {
+            logColor = Colors.greenAccent;
+          } else if (log.contains("Error")) {
+            logColor = Colors.redAccent;
+          } else if (log.contains("Scanning")) {
+            logColor = Colors.cyanAccent;
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10.0),
+            child: Text(
+              "> $log",
+              style: TextStyle(
+                  color: logColor, fontSize: 12, fontFamily: 'monospace'),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildManualTrigger() {
+  Widget _buildActionPanel(WidgetRef ref, AgentState agent) {
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: 64,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.cyanAccent,
-          foregroundColor: Colors.black,
+          backgroundColor: agent.isRunning
+              ? Colors.redAccent.withValues(alpha: 0.1)
+              : Colors.cyanAccent,
+          foregroundColor: agent.isRunning ? Colors.redAccent : Colors.black,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
-        onPressed: isSyncing ? null : _handleAgenticPurchase,
-        child: const Text("FORCE AGENTIC SETTLEMENT",
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        onPressed: () {
+          ref.read(agentProvider.notifier).toggleAgent(!agent.isRunning);
+        },
+        child: Text(
+          agent.isRunning
+              ? "HALT AUTONOMOUS WORKFLOW"
+              : "INITIALIZE AGENTIC WORKFLOW",
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
     );
   }
