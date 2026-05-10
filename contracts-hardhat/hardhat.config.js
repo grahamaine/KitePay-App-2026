@@ -1,9 +1,8 @@
 import "@nomicfoundation/hardhat-ethers";
-import dotenv from "dotenv";
-import { defineConfig } from "hardhat/config";
+import * as dotenv from "dotenv";
 dotenv.config();
 
-export default defineConfig({
+export default {
   solidity: "0.8.20",
   networks: {
     sepolia: {
@@ -11,4 +10,4 @@ export default defineConfig({
       accounts: [process.env.PRIVATE_KEY]
     }
   }
-});
+};
