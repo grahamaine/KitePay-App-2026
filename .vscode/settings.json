@@ -7,5 +7,6 @@
   "dart.flutterSdkPath": null,
   "dart.analysisExcludedFolders": [
     "build/"
-  ]
+  ],
+  "cmake.sourceDirectory": "C:/Users/Lenovo/Desktop/KitePay-App-2026/linux"
 }
