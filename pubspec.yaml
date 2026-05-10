@@ -1,40 +1,32 @@
-name: kitepay_app_2026
-description: "Kite AI Agent Dashboard"
+name: kitepay
+description: KitePay Flutter app powered by Turnkey embedded wallets.
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_riverpod: ^2.5.1
-  flutter_dotenv: ^5.1.0
-  cupertino_icons: ^1.0.6
-  http: ^1.2.0
-  web3dart: ^2.7.3
-  
-  # WebView & HTML (Fixed version to avoid conflict)
-  flutter_html: ^3.0.0-beta.2
-  webview_flutter: ^4.7.0
 
-  # MISSING PACKAGES CAUSING YOUR ERRORS:
-  # Note: If these were local folders, use 'path: ../folder_name'
-  turnkey_api_key_stamper: ^0.2.1
+  # Turnkey — single package, bundles http + stamper transitively
   turnkey_sdk_flutter: ^1.2.1
-  turnkey_http: ^1.1.2
-  
-  # Based on your logs, you are likely using a local version of this SDK:
-  kitepay_sdk:
-    path: ./kitepay_sdk 
+
+  # State management  ← was missing; caused all provider URI / undefined errors
+  provider: ^6.1.2
+
+  cupertino_icons: ^1.0.8
+  flutter_dotenv: ^6.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
+
+  # Create the directory before running:  mkdir -p assets/images
   assets:
-    - .env
+    - assets/images/

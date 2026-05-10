@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "KitePay (debug)",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "--dart-define=TURNKEY_ORG_ID=725d7232-944c-4a2e-b71f-30997b3868a4",
+                "--dart-define=ETH_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_NEW_KEY"
+            ]
+        }
+    ]
+}
