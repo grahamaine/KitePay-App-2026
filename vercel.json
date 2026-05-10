@@ -1,4 +1,9 @@
 {
+    "version": 2,
+    "framework": null,
+    "buildCommand": null,
+    "outputDirectory": "build/web",
+    "cleanUrls": true,
     "rewrites": [
         {
             "source": "/(.*)",
