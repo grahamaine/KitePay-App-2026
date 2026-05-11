@@ -1,4 +1,4 @@
-import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-ethers";
 import * as dotenv from "dotenv";
 import { defineConfig } from "hardhat/config";
 
@@ -19,25 +19,20 @@ export default defineConfig({
     hardhat: {
       type: "edr-simulated",
     },
+    kiteTestnet: {
+      type: "http",
+      url: process.env.KITE_TESTNET_RPC_URL ?? "https://rpc-testnet.gokite.ai/",
+      chainId: 2368,
+    },
+    kiteMainnet: {
+      type: "http",
+      url: process.env.KITE_MAINNET_RPC_URL ?? "https://rpc.gokite.ai/",
+      chainId: 2366,
+    },
     sepolia: {
       type: "http",
       url: process.env.SEPOLIA_RPC_URL ?? "https://rpc.sepolia.org",
       chainId: 11155111,
-    },
-    baseSepolia: {
-      type: "http",
-      url: process.env.BASE_SEPOLIA_RPC_URL ?? "https://sepolia.base.org",
-      chainId: 84532,
-    },
-    amoy: {
-      type: "http",
-      url: process.env.AMOY_RPC_URL ?? "https://rpc-amoy.polygon.technology",
-      chainId: 80002,
-    },
-    mainnet: {
-      type: "http",
-      url: process.env.MAINNET_RPC_URL ?? "https://cloudflare-eth.com",
-      chainId: 1,
     },
   },
 });
