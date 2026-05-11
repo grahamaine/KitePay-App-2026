@@ -3,15 +3,10 @@ import 'package:turnkey_sdk_flutter/turnkey_sdk_flutter.dart';
 
 /// KiteAgentService wraps TurnkeyProvider to handle all auth & wallet
 /// operations for the KitePay app.
-///
-/// Fixes applied vs. original:
-///   - No TurnkeySession / TurnkeyUser / TurnkeyWallet — these don't exist.
-///     The SDK uses Session, and user/wallets are dynamic fields on the provider.
-///   - Enum constants are lowercase: v1Curve.curve_secp256k1 (not CURVE_SECP256K1)
-///   - loginWithPasskey / signUpWithPasskey are on TurnkeyProvider, not TurnkeyClient.
 class KiteAgentService extends ChangeNotifier {
   // ── Constants ────────────────────────────────────────────────────────────
-  static const String _rpId = 'kite-pay-app-2026.vercel.app';
+  static const String _rpId =
+      'kitepay.vercel.app'; // ← fixed (was kite-pay-app-2026.vercel.app)
   static const String _orgId = String.fromEnvironment('TURNKEY_ORG_ID');
   static const String _sessionExpiry = '900'; // 15 minutes
 
@@ -94,7 +89,6 @@ class KiteAgentService extends ChangeNotifier {
           walletName: walletName,
           accounts: [
             const v1WalletAccountParams(
-              // Correct lowercase enum values — SCREAMING_SNAKE caused errors
               curve: v1Curve.curve_secp256k1,
               pathFormat: v1PathFormat.path_format_bip32,
               path: "m/44'/60'/0'/0/0",
