@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../main.dart' show KiteColors, KiteWalletConnectButton;
+import '../screens/wallet_screen.dart';
 import '../services/agent_service.dart';
 import 'login_screen.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HomeScreen — bottom nav shell (Home tab + Wallet tab)
+// ─────────────────────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -13,6 +18,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+
+  static const _tabs = [
+    _DashboardTab(),
+    WalletScreen(),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -21,6 +33,48 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: KiteColors.navy900,
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _tabs,
+      ),
+      bottomNavigationBar: NavigationBar(
+        backgroundColor: KiteColors.navy800,
+        indicatorColor: KiteColors.cyan400.withValues(alpha: 0.15),
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded, color: KiteColors.cyan400),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet_rounded,
+                color: KiteColors.cyan400),
+            label: 'Wallet',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dashboard tab (original home content)
+// ─────────────────────────────────────────────────────────────────────────────
+class _DashboardTab extends StatefulWidget {
+  const _DashboardTab();
+
+  @override
+  State<_DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends State<_DashboardTab> {
   Future<void> _handleLogout() async {
     await context.read<KiteAgentService>().logout();
     if (!mounted) return;
@@ -48,7 +102,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final agent = context.watch<KiteAgentService>();
     final theme = Theme.of(context);
 
-    // user and wallets are dynamic (no TurnkeyUser / TurnkeyWallet classes)
     final dynamic user = agent.user;
     final List<dynamic> wallets = agent.wallets ?? [];
 
@@ -60,10 +113,13 @@ class _HomeScreenState extends State<HomeScreen> {
             .toString();
 
     return Scaffold(
+      backgroundColor: KiteColors.navy900,
       appBar: AppBar(
         title: const Text('KitePay'),
         centerTitle: false,
         actions: [
+          // WalletConnect button in app bar
+          const KiteWalletConnectButton(),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',
@@ -136,6 +192,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Empty wallets card
+// ─────────────────────────────────────────────────────────────────────────────
 class _EmptyWalletsCard extends StatelessWidget {
   final VoidCallback onTap;
   const _EmptyWalletsCard({required this.onTap});
@@ -172,6 +231,9 @@ class _EmptyWalletsCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Wallet card
+// ─────────────────────────────────────────────────────────────────────────────
 class _WalletCard extends StatelessWidget {
   final Map<String, dynamic> wallet;
   const _WalletCard({required this.wallet});
@@ -183,7 +245,6 @@ class _WalletCard extends StatelessWidget {
     final String name =
         (wallet['walletName'] ?? wallet['name'] ?? 'Wallet').toString();
 
-    // accounts is a list of account maps; grab the first address
     final accounts = wallet['accounts'] as List?;
     final String address = accounts != null && accounts.isNotEmpty
         ? (accounts.first['address'] ?? '—').toString()

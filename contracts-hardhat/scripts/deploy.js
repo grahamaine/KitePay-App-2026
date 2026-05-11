@@ -1,10 +1,10 @@
-import hre from "hardhat";
+import { ethers } from "hardhat";
 
 async function main() {
-  const [deployer] = await hre.ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
   console.log("Deploying with:", deployer.address);
 
-  const Token = await hre.ethers.getContractFactory("KitePayToken");
+  const Token = await ethers.getContractFactory("KitePayToken");
   const token = await Token.deploy();
   await token.waitForDeployment();
 
