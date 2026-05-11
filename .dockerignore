@@ -1,6 +1,0 @@
-.dart_tool/
-build/
-.git/
-node_modules/
-*.deb
-*.exe
