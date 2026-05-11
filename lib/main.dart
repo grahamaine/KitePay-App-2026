@@ -106,14 +106,18 @@ class KiteAnalytics {
 // Biometric service — gracefully no-ops on web
 // ─────────────────────────────────────────────────────────────────────────────
 class KiteBiometricService {
+  // Never instantiate LocalAuthentication on web — it throws PlatformException
   static LocalAuthentication? _authInstance;
-  static LocalAuthentication get _auth =>
-      _authInstance ??= LocalAuthentication();
+  static LocalAuthentication? get _auth {
+    if (kIsWeb) return null;
+    return _authInstance ??= LocalAuthentication();
+  }
 
   static Future<bool> isAvailable() async {
     if (kIsWeb) return false;
     try {
-      return await _auth.canCheckBiometrics && await _auth.isDeviceSupported();
+      return await _auth!.canCheckBiometrics &&
+          await _auth!.isDeviceSupported();
     } catch (_) {
       return false;
     }
@@ -122,7 +126,7 @@ class KiteBiometricService {
   static Future<List<BiometricType>> enrolledBiometrics() async {
     if (kIsWeb) return [];
     try {
-      return await _auth.getAvailableBiometrics();
+      return await _auth!.getAvailableBiometrics();
     } catch (_) {
       return [];
     }
@@ -131,9 +135,9 @@ class KiteBiometricService {
   static Future<bool> authenticate({
     String localizedReason = 'Authenticate to access KitePay',
   }) async {
-    if (kIsWeb) return true; // skip on web
+    if (kIsWeb) return true;
     try {
-      return await _auth.authenticate(
+      return await _auth!.authenticate(
         localizedReason: localizedReason,
         options: const AuthenticationOptions(
           biometricOnly: false,
@@ -354,6 +358,10 @@ void main() async {
             config: TurnkeyConfig(
               apiBaseUrl: 'https://api.turnkey.com',
               organizationId: const String.fromEnvironment('TURNKEY_ORG_ID'),
+              authProxyConfigId: const String.fromEnvironment(
+                'TURNKEY_AUTH_PROXY_CONFIG_ID',
+                defaultValue: 'c5558d8d-6ee3-4a70-aebb-dc40d40116df',
+              ),
               appScheme: 'kitepay',
               onSessionCreated: (_) => debugPrint('✅ Session created'),
               onSessionSelected: (_) => debugPrint('🔄 Session selected'),

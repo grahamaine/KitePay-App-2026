@@ -5,8 +5,7 @@ import 'package:turnkey_sdk_flutter/turnkey_sdk_flutter.dart';
 /// operations for the KitePay app.
 class KiteAgentService extends ChangeNotifier {
   // ── Constants ────────────────────────────────────────────────────────────
-  static const String _rpId =
-      'kitepay.vercel.app'; // ← fixed (was kite-pay-app-2026.vercel.app)
+  static const String _rpId = 'kitepay.vercel.app';
   static const String _orgId = String.fromEnvironment('TURNKEY_ORG_ID');
   static const String _sessionExpiry = '900'; // 15 minutes
 
@@ -19,13 +18,8 @@ class KiteAgentService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get lastError => _lastError;
 
-  /// Active session — type is Session (not TurnkeySession).
   Session? get session => _turnkey.session;
-
-  /// Current user — dynamic map from the Turnkey API response.
   dynamic get user => _turnkey.user;
-
-  /// Current wallets — dynamic list from the Turnkey API response.
   List<dynamic>? get wallets => (_turnkey.wallets as List?)?.cast<dynamic>();
 
   KiteAgentService(this._turnkey) {
@@ -40,7 +34,6 @@ class KiteAgentService extends ChangeNotifier {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
-  /// Sign in an existing user with their registered passkey.
   Future<bool> loginWithPasskey() => _run(() async {
         await _turnkey.loginWithPasskey(
           rpId: _rpId,
@@ -49,7 +42,6 @@ class KiteAgentService extends ChangeNotifier {
         );
       });
 
-  /// Register a new user and create their passkey.
   Future<bool> signUpWithPasskey({
     required String displayName,
     required String email,
@@ -67,7 +59,6 @@ class KiteAgentService extends ChangeNotifier {
         );
       });
 
-  /// Sign out and clear the session from secure storage.
   Future<void> logout() async {
     _setLoading(true);
     try {
@@ -82,7 +73,6 @@ class KiteAgentService extends ChangeNotifier {
 
   // ── Wallet ────────────────────────────────────────────────────────────────
 
-  /// Create a new EVM (Ethereum) wallet for the current user.
   Future<bool> createEvmWallet({String walletName = 'KitePay Wallet'}) =>
       _run(() async {
         await _turnkey.createWallet(
@@ -98,7 +88,6 @@ class KiteAgentService extends ChangeNotifier {
         );
       });
 
-  /// Sign a raw EVM transaction. Returns the signed tx hex, or null on failure.
   Future<String?> signTransaction({
     required String signWith,
     required String unsignedTransaction,
@@ -115,15 +104,12 @@ class KiteAgentService extends ChangeNotifier {
     return signed;
   }
 
-  /// Pull latest wallet list from Turnkey.
   Future<void> refreshWallets() => _run(_turnkey.refreshWallets);
 
-  /// Extend the current session before expiry.
   Future<bool> refreshSession() => _run(() async {
         await _turnkey.refreshSession(expirationSeconds: _sessionExpiry);
       });
 
-  /// Returns true when there is an active, non-expired session.
   Future<bool> hasActiveSession() async {
     try {
       return await _turnkey.getSession() != null;
