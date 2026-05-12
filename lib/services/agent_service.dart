@@ -28,7 +28,6 @@ class KiteAgentService extends ChangeNotifier {
     _setLoading(true);
     _lastError = null;
     try {
-      // Try signing in to check if user exists
       try {
         await _auth.signInWithEmailAndPassword(
           email: email,
@@ -36,7 +35,6 @@ class KiteAgentService extends ChangeNotifier {
         );
       } on FirebaseAuthException catch (e) {
         if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
-          // New user — create placeholder account first
           await _auth.createUserWithEmailAndPassword(
             email: email,
             password: _generateTempPassword(email),
@@ -110,22 +108,6 @@ class KiteAgentService extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
-  }
-
-  // ── Passkey stubs (mobile — coming soon) ──────────────────────────────────
-  Future<bool> loginWithPasskey() async {
-    _lastError = 'Passkey login coming soon on mobile.';
-    notifyListeners();
-    return false;
-  }
-
-  Future<bool> signUpWithPasskey({
-    required String displayName,
-    required String email,
-  }) async {
-    _lastError = 'Passkey sign-up coming soon on mobile.';
-    notifyListeners();
-    return false;
   }
 
   // ── Wallet stubs ──────────────────────────────────────────────────────────

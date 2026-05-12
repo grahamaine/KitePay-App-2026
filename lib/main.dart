@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +15,7 @@ import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/agent_service.dart';
+import 'services/kite_chain_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Brand tokens
@@ -92,46 +92,6 @@ class KiteAnalytics {
     try {
       await _analytics.setUserId(id: userId);
     } catch (_) {}
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Biometric service — no-ops on web
-// ─────────────────────────────────────────────────────────────────────────────
-class KiteBiometricService {
-  static LocalAuthentication? _authInstance;
-  static LocalAuthentication? get _auth {
-    if (kIsWeb) return null;
-    return _authInstance ??= LocalAuthentication();
-  }
-
-  static Future<bool> isAvailable() async {
-    if (kIsWeb) return false;
-    try {
-      return await _auth!.canCheckBiometrics &&
-          await _auth!.isDeviceSupported();
-    } catch (_) {
-      return false;
-    }
-  }
-
-  static Future<bool> authenticate({
-    String localizedReason = 'Authenticate to access KitePay',
-  }) async {
-    if (kIsWeb) return true;
-    try {
-      return await _auth!.authenticate(
-        localizedReason: localizedReason,
-        options: const AuthenticationOptions(
-          biometricOnly: false,
-          stickyAuth: true,
-          useErrorDialogs: true,
-        ),
-      );
-    } on PlatformException catch (e) {
-      debugPrint('Biometric error: $e');
-      return false;
-    }
   }
 }
 
@@ -237,6 +197,7 @@ void main() async {
         ChangeNotifierProvider(
             create: (_) => KiteLocaleProvider(initialLocale)),
         ChangeNotifierProvider(create: (_) => KiteAgentService()),
+        ChangeNotifierProvider(create: (_) => KiteChainService()),
       ],
       child: const KitePayApp(),
     ),
@@ -534,34 +495,21 @@ class _AuthGateState extends State<AuthGate>
   }
 
   Future<void> _bootstrap() async {
-    try {
-      await Future.delayed(const Duration(milliseconds: 1900));
-      if (!mounted) return;
+    await Future.delayed(const Duration(milliseconds: 1900));
+    if (!mounted) return;
 
+    try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Show onboarding for first-time users
       if (!(prefs.getBool(KitePrefsKeys.onboardingComplete) ?? false)) {
         _go(const OnboardingScreen());
         return;
       }
 
-      // Check Firebase auth state — skip login if already signed in
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         _go(const HomeScreen());
         return;
-      }
-
-      // Biometrics (mobile only)
-      if (!kIsWeb && (prefs.getBool(KitePrefsKeys.biometricEnabled) ?? false)) {
-        final ok = await KiteBiometricService.authenticate(
-            localizedReason: 'Unlock KitePay to continue');
-        if (!mounted) return;
-        if (!ok) {
-          _go(const LoginScreen());
-          return;
-        }
       }
 
       _go(const LoginScreen());
