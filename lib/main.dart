@@ -13,6 +13,7 @@ import 'package:reown_appkit/reown_appkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:turnkey_sdk_flutter/turnkey_sdk_flutter.dart';
 
+import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/agent_service.dart';
@@ -177,7 +178,7 @@ class KiteWalletProvider extends ChangeNotifier {
         context: context,
         projectId: const String.fromEnvironment(
           'WALLETCONNECT_PROJECT_ID',
-          defaultValue: 'YOUR_PROJECT_ID',
+          defaultValue: '330707bcc383f56d2f8710e23161f96b',
         ),
         metadata: const PairingMetadata(
           name: 'KitePay',
@@ -303,19 +304,21 @@ void main() async {
     debugPrint('Flutter error: ${details.exception}\n${details.stack}');
   };
 
-  // ── Firebase (Android / iOS only) ────────────────────────────────────────
-  if (!kIsWeb) {
-    try {
-      await Firebase.initializeApp();
+  // ── Firebase (web + mobile) ───────────────────────────────────────────────
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    if (!kIsWeb) {
       FlutterError.onError =
           FirebaseCrashlytics.instance.recordFlutterFatalError;
       WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
         return true;
       };
-    } catch (e) {
-      debugPrint('Firebase init skipped: $e');
     }
+  } catch (e) {
+    debugPrint('Firebase init error: $e');
   }
 
   // ── Persisted preferences ─────────────────────────────────────────────────
@@ -357,7 +360,10 @@ void main() async {
           create: (_) => TurnkeyProvider(
             config: TurnkeyConfig(
               apiBaseUrl: 'https://api.turnkey.com',
-              organizationId: const String.fromEnvironment('TURNKEY_ORG_ID'),
+              organizationId: const String.fromEnvironment(
+                'TURNKEY_ORG_ID',
+                defaultValue: '725d7232-944c-4a2e-b71f-30997b3868a4',
+              ),
               authProxyConfigId: const String.fromEnvironment(
                 'TURNKEY_AUTH_PROXY_CONFIG_ID',
                 defaultValue: 'c5558d8d-6ee3-4a70-aebb-dc40d40116df',
