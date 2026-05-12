@@ -134,8 +134,8 @@ KitePay-App-2026/
 
 ### 1. Clone
 ```bash
-git clone https://github.com/yourusername/KitePay-App-2026.git
-cd KitePay-App-2026
+git clone https://github.com/grahamaine/KitePay_.git
+cd KitePay_
 ```
 
 ### 2. Run the Web App
