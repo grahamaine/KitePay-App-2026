@@ -107,7 +107,6 @@ class KiteAnalytics {
 // Biometric service — gracefully no-ops on web
 // ─────────────────────────────────────────────────────────────────────────────
 class KiteBiometricService {
-  // Never instantiate LocalAuthentication on web — it throws PlatformException
   static LocalAuthentication? _authInstance;
   static LocalAuthentication? get _auth {
     if (kIsWeb) return null;
@@ -173,6 +172,7 @@ class KiteWalletProvider extends ChangeNotifier {
   }
 
   Future<void> init(BuildContext context) async {
+    if (kIsWeb) return; // reown_appkit does not support web
     try {
       _modal = ReownAppKitModal(
         context: context,
@@ -235,17 +235,23 @@ class KiteWalletProvider extends ChangeNotifier {
   }
 
   Future<void> openModal(BuildContext context) async {
+    if (kIsWeb) return; // reown_appkit does not support web
     if (_modal == null) await init(context);
     _modal?.openModalView();
   }
 
-  Future<void> disconnect() async => _modal?.disconnect();
+  Future<void> disconnect() async {
+    if (kIsWeb) return;
+    await _modal?.disconnect();
+  }
 
   @override
   void dispose() {
-    _modal?.onModalConnect.unsubscribe(_onConnect);
-    _modal?.onModalDisconnect.unsubscribe(_onDisconnect);
-    _modal?.onModalNetworkChange.unsubscribe(_onNetworkChange);
+    if (!kIsWeb) {
+      _modal?.onModalConnect.unsubscribe(_onConnect);
+      _modal?.onModalDisconnect.unsubscribe(_onDisconnect);
+      _modal?.onModalNetworkChange.unsubscribe(_onNetworkChange);
+    }
     super.dispose();
   }
 }
@@ -382,6 +388,8 @@ void main() async {
           create: (ctx) => KiteAgentService(ctx.read<TurnkeyProvider>()),
           update: (_, tk, prev) => prev ?? KiteAgentService(tk),
         ),
+        // KiteWalletProvider registered on all platforms;
+        // all reown_appkit calls are guarded with kIsWeb checks internally
         ChangeNotifierProvider(create: (_) => KiteWalletProvider()),
       ],
       child: const KitePayApp(),
@@ -1108,6 +1116,7 @@ class KiteWalletConnectButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) return const SizedBox.shrink(); // hidden on web
     final wallet = context.watch<KiteWalletProvider>();
     return GestureDetector(
       onTap: () => wallet.openModal(context),
