@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -12,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
+import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/agent_service.dart';
 
@@ -489,7 +491,7 @@ InputDecorationTheme _inputTheme(Color fill, Color border) =>
     );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AuthGate
+// AuthGate — checks Firebase auth state
 // ─────────────────────────────────────────────────────────────────────────────
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -538,11 +540,20 @@ class _AuthGateState extends State<AuthGate>
 
       final prefs = await SharedPreferences.getInstance();
 
+      // Show onboarding for first-time users
       if (!(prefs.getBool(KitePrefsKeys.onboardingComplete) ?? false)) {
         _go(const OnboardingScreen());
         return;
       }
 
+      // Check Firebase auth state — skip login if already signed in
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        _go(const HomeScreen());
+        return;
+      }
+
+      // Biometrics (mobile only)
       if (!kIsWeb && (prefs.getBool(KitePrefsKeys.biometricEnabled) ?? false)) {
         final ok = await KiteBiometricService.authenticate(
             localizedReason: 'Unlock KitePay to continue');

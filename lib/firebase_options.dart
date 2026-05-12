@@ -60,4 +60,5 @@ class DefaultFirebaseOptions {
     authDomain: 'kitepay-aine.firebaseapp.com',
     storageBucket: 'kitepay-aine.firebasestorage.app',
   );
+
 }

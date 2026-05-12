@@ -9,6 +9,7 @@
       "dependencies": [
         "cupertino_icons",
         "firebase_analytics",
+        "firebase_auth",
         "firebase_core",
         "firebase_crashlytics",
         "flutter",
@@ -79,6 +80,18 @@
         "firebase_crashlytics_platform_interface",
         "flutter",
         "stack_trace"
+      ]
+    },
+    {
+      "name": "firebase_auth",
+      "version": "5.7.0",
+      "dependencies": [
+        "firebase_auth_platform_interface",
+        "firebase_auth_web",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter",
+        "meta"
       ]
     },
     {
@@ -306,6 +319,32 @@
     {
       "name": "firebase_crashlytics_platform_interface",
       "version": "3.8.10",
+      "dependencies": [
+        "_flutterfire_internals",
+        "collection",
+        "firebase_core",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_auth_web",
+      "version": "5.15.3",
+      "dependencies": [
+        "firebase_auth_platform_interface",
+        "firebase_core",
+        "firebase_core_web",
+        "flutter",
+        "flutter_web_plugins",
+        "http_parser",
+        "meta",
+        "web"
+      ]
+    },
+    {
+      "name": "firebase_auth_platform_interface",
+      "version": "7.7.3",
       "dependencies": [
         "_flutterfire_internals",
         "collection",
