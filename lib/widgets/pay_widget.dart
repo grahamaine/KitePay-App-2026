@@ -17,7 +17,6 @@ class _PayWidgetState extends State<PayWidget> {
   bool _scanning = false;
   bool _paying = false;
   String? _scannedAddress;
-  String? _txHash;
   final _amountCtrl = TextEditingController();
 
   @override
@@ -93,7 +92,6 @@ class _PayWidgetState extends State<PayWidget> {
     setState(() => _paying = false);
 
     if (txHash != null) {
-      setState(() => _txHash = txHash);
       _showSuccessSheet(txHash, amount);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -119,14 +117,18 @@ class _PayWidgetState extends State<PayWidget> {
             const Icon(Icons.check_circle_rounded,
                 color: Colors.green, size: 64),
             const SizedBox(height: 16),
-            Text('Payment sent!',
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Payment sent!',
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text('$amount KITE sent on Kite chain',
-                style: const TextStyle(color: KiteColors.grey400)),
+            Text(
+              '$amount KITE sent on Kite chain',
+              style: const TextStyle(color: KiteColors.grey400),
+            ),
             const SizedBox(height: 12),
             Text(
               'Tx: ${txHash.substring(0, 12)}...${txHash.substring(txHash.length - 8)}',
@@ -141,7 +143,6 @@ class _PayWidgetState extends State<PayWidget> {
                 Navigator.pop(context);
                 setState(() {
                   _scannedAddress = null;
-                  _txHash = null;
                   _amountCtrl.clear();
                 });
               },
@@ -197,7 +198,7 @@ class _PayWidgetState extends State<PayWidget> {
           ),
           const SizedBox(height: 24),
 
-          // Scanner
+          // Scanner or tap-to-scan placeholder
           if (_scanning)
             ClipRRect(
               borderRadius: BorderRadius.circular(20),

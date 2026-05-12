@@ -17,7 +17,6 @@ class _SendWidgetState extends State<SendWidget> {
   final _amountCtrl = TextEditingController();
   final _memoCtrl = TextEditingController();
   bool _sending = false;
-  String? _txHash;
   double _estimatedGas = 0.0;
 
   @override
@@ -45,12 +44,12 @@ class _SendWidgetState extends State<SendWidget> {
     final kite = context.read<KiteChainService>();
     final agent = context.read<KiteAgentService>();
 
-    // Get private key from wallet (in production: from secure storage)
     final wallets = agent.wallets;
     if (wallets.isEmpty) {
       _showError('No wallet found. Create one first.');
       return;
     }
+
     final accounts = wallets.first['accounts'] as List?;
     final privateKey = accounts?.first['privateKey']?.toString();
     if (privateKey == null) {
@@ -58,10 +57,7 @@ class _SendWidgetState extends State<SendWidget> {
       return;
     }
 
-    setState(() {
-      _sending = true;
-      _txHash = null;
-    });
+    setState(() => _sending = true);
 
     final txHash = await kite.sendKite(
       privateKeyHex: privateKey,
@@ -74,7 +70,6 @@ class _SendWidgetState extends State<SendWidget> {
     setState(() => _sending = false);
 
     if (txHash != null) {
-      setState(() => _txHash = txHash);
       _showSuccess(txHash);
     } else {
       _showError(kite.lastError ?? 'Transaction failed.');
@@ -99,12 +94,15 @@ class _SendWidgetState extends State<SendWidget> {
           children: [
             const Text('Transaction confirmed on Kite chain.'),
             const SizedBox(height: 12),
-            Text('Tx: ${txHash.substring(0, 18)}...',
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+            Text(
+              'Tx: ${txHash.substring(0, 18)}...',
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+            ),
             const SizedBox(height: 8),
-            Text('View on KiteScan: ${kite.explorerTxUrl}$txHash',
-                style:
-                    const TextStyle(color: KiteColors.cyan400, fontSize: 12)),
+            Text(
+              'View on KiteScan: ${kite.explorerTxUrl}$txHash',
+              style: const TextStyle(color: KiteColors.cyan400, fontSize: 12),
+            ),
           ],
         ),
         actions: [
@@ -183,8 +181,9 @@ class _SendWidgetState extends State<SendWidget> {
                 prefixIcon: Icon(Icons.account_circle_outlined),
               ),
               validator: (v) {
-                if (v == null || v.trim().isEmpty)
+                if (v == null || v.trim().isEmpty) {
                   return 'Enter recipient address';
+                }
                 if (!kite.isValidAddress(v.trim())) {
                   return 'Invalid Ethereum/Kite address';
                 }
@@ -206,14 +205,15 @@ class _SendWidgetState extends State<SendWidget> {
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Enter amount';
                 final amount = double.tryParse(v.trim());
-                if (amount == null || amount <= 0)
+                if (amount == null || amount <= 0) {
                   return 'Enter a valid amount';
+                }
                 return null;
               },
             ),
             const SizedBox(height: 16),
 
-            // Memo (optional)
+            // Memo
             TextFormField(
               controller: _memoCtrl,
               decoration: const InputDecoration(
@@ -253,9 +253,9 @@ class _SendWidgetState extends State<SendWidget> {
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation(KiteColors.navy900)),
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(KiteColors.navy900),
+                      ),
                     )
                   : const Icon(Icons.send_rounded),
               label: Text(_sending ? 'Sending...' : 'Send KITE'),
