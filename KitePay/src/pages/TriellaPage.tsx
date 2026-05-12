@@ -15,7 +15,7 @@ const ACTIVITY = [
 ]
 
 export const TriellaPage = () => {
-  const { address, isConnected } = useAppKitAccount()
+  const { address } = useAppKitAccount()
   const { chainId } = useAppKitNetwork()
   const onKite = [2368, 2366].includes(Number(chainId))
 
