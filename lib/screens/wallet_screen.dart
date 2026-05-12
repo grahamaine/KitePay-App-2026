@@ -27,7 +27,6 @@ const _erc20Abi = '''[
 class KiteBalanceService {
   static Future<Map<String, String>> fetchBalances(
       String address, String chainId) async {
-    // web3dart uses dart:io which is not available on web
     if (kIsWeb) return {'native': 'Connect app', 'kite': 'Connect app'};
     try {
       final rpc = chainId == '2366' ? _kiteMainnetRpc : _kiteTestnetRpc;
@@ -52,7 +51,7 @@ class KiteBalanceService {
       await client.dispose();
       return {'native': nativeKite, 'kite': tokenBal};
     } catch (e) {
-      debugPrint('Balance fetch error: \$e');
+      debugPrint('Balance fetch error: $e');
       return {'native': '--', 'kite': '--'};
     }
   }
@@ -80,8 +79,10 @@ class _WalletScreenState extends State<WalletScreen>
       ..forward();
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final wallet = context.read<KiteWalletProvider>();
-      if (wallet.modal == null) wallet.init(context);
+      if (!kIsWeb) {
+        final wallet = context.read<KiteWalletProvider>();
+        if (!wallet.isConnected) wallet.init(context);
+      }
       KiteAnalytics.logScreenView('wallet_screen');
     });
   }
@@ -95,6 +96,39 @@ class _WalletScreenState extends State<WalletScreen>
   @override
   Widget build(BuildContext context) {
     final wallet = context.watch<KiteWalletProvider>();
+
+    // On web, WalletConnect is not supported — show placeholder
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: KiteColors.navy900,
+        appBar: AppBar(title: const Text('Wallet')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.account_balance_wallet_outlined,
+                    size: 64, color: KiteColors.cyan400),
+                const SizedBox(height: 24),
+                Text('WalletConnect',
+                    style: Theme.of(context).textTheme.headlineMedium),
+                const SizedBox(height: 12),
+                Text(
+                  'WalletConnect is available on the mobile app. Use the KitePay mobile app to connect your wallet.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: KiteColors.grey400, height: 1.7),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: KiteColors.navy900,
       appBar: AppBar(
@@ -460,7 +494,7 @@ class _KiteTokenCard extends StatelessWidget {
                     color: KiteColors.white)),
             const SizedBox(height: 2),
             Text(
-                '${_kiteTokenAddress.substring(0, 6)}…${_kiteTokenAddress.substring(_kiteTokenAddress.length - 4)}',
+                '${_kiteTokenAddress.substring(0, 6)}...${_kiteTokenAddress.substring(_kiteTokenAddress.length - 4)}',
                 style: const TextStyle(
                     fontSize: 11,
                     color: KiteColors.grey400,
@@ -547,7 +581,7 @@ class _ActionBtn extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Network badge — includes KiteAI
+// Network badge
 // ─────────────────────────────────────────────────────────────────────────────
 class _NetworkBadge extends StatelessWidget {
   final String? chainId;
@@ -616,7 +650,7 @@ class _ActivityList extends StatelessWidget {
             icon: Icons.arrow_downward_rounded,
             iconColor: KiteColors.success,
             title: 'Received KITE',
-            subtitle: 'From 0xAbC…1234',
+            subtitle: 'From 0xAbC...1234',
             amount: '+0.05 KITE',
             amountColor: KiteColors.success,
             date: 'Today, 09:14'),
@@ -625,7 +659,7 @@ class _ActivityList extends StatelessWidget {
             icon: Icons.token_rounded,
             iconColor: KiteColors.gold400,
             title: 'KITE Token Transfer',
-            subtitle: 'To 0xDeF…5678',
+            subtitle: 'To 0xDeF...5678',
             amount: '-100 KITE',
             amountColor: KiteColors.error,
             date: 'Yesterday, 17:30'),
@@ -633,7 +667,7 @@ class _ActivityList extends StatelessWidget {
         Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-                'Pull down to refresh • Live activity via KiteScan coming soon',
+                'Pull down to refresh. Live activity via KiteScan coming soon.',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center)),
       ]),
@@ -760,9 +794,7 @@ class _SendSheetState extends State<_SendSheet> {
             .showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
-      if (mounted) {
-        setState(() => _sending = false);
-      }
+      if (mounted) setState(() => _sending = false);
     }
   }
 
@@ -806,7 +838,7 @@ class _SendSheetState extends State<_SendSheet> {
             TextField(
                 controller: _toCtrl,
                 decoration: const InputDecoration(
-                    labelText: 'To address (0x…)',
+                    labelText: 'To address (0x...)',
                     prefixIcon: Icon(Icons.person_outline_rounded)),
                 style: const TextStyle(color: KiteColors.white)),
             const SizedBox(height: 12),
@@ -966,9 +998,7 @@ class _ReceiveSheet extends StatelessWidget {
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text(
-                        'Add share_plus to pubspec.yaml for native sharing'))),
+                const SnackBar(content: Text('Share feature coming soon!'))),
             icon: const Icon(Icons.share_rounded),
             label: const Text('Share Address'),
             style: OutlinedButton.styleFrom(

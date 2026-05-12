@@ -11,10 +11,8 @@ import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:reown_appkit/reown_appkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:turnkey_sdk_flutter/turnkey_sdk_flutter.dart';
 
 import 'firebase_options.dart';
-import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/agent_service.dart';
 
@@ -23,24 +21,19 @@ import 'services/agent_service.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 class KiteColors {
   KiteColors._();
-
   static const Color navy900 = Color(0xFF050D1A);
   static const Color navy800 = Color(0xFF0A1628);
   static const Color navy700 = Color(0xFF0F2040);
   static const Color navy600 = Color(0xFF142B58);
-
   static const Color cyan400 = Color(0xFF00E5FF);
   static const Color cyan300 = Color(0xFF4DFBFF);
   static const Color cyan500 = Color(0xFF00B8D4);
-
   static const Color gold400 = Color(0xFFFFCA28);
   static const Color gold300 = Color(0xFFFFE082);
-
   static const Color white = Color(0xFFFFFFFF);
   static const Color grey100 = Color(0xFFF5F7FA);
   static const Color grey400 = Color(0xFF9AA5B4);
   static const Color grey600 = Color(0xFF627D98);
-
   static const Color success = Color(0xFF00C853);
   static const Color error = Color(0xFFFF1744);
 }
@@ -57,13 +50,11 @@ class KitePrefsKeys {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Analytics — web-safe (all calls wrapped in try/catch)
+// Analytics — web-safe
 // ─────────────────────────────────────────────────────────────────────────────
 class KiteAnalytics {
   KiteAnalytics._();
-
   static FirebaseAnalytics? _instance;
-
   static FirebaseAnalytics get _analytics {
     _instance ??= FirebaseAnalytics.instance;
     return _instance!;
@@ -78,7 +69,7 @@ class KiteAnalytics {
     try {
       await _analytics.logEvent(name: name, parameters: params);
     } catch (e) {
-      debugPrint('Analytics.logEvent error: $e');
+      debugPrint('Analytics error: $e');
     }
   }
 
@@ -104,7 +95,7 @@ class KiteAnalytics {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Biometric service — gracefully no-ops on web
+// Biometric service — no-ops on web
 // ─────────────────────────────────────────────────────────────────────────────
 class KiteBiometricService {
   static LocalAuthentication? _authInstance;
@@ -120,15 +111,6 @@ class KiteBiometricService {
           await _auth!.isDeviceSupported();
     } catch (_) {
       return false;
-    }
-  }
-
-  static Future<List<BiometricType>> enrolledBiometrics() async {
-    if (kIsWeb) return [];
-    try {
-      return await _auth!.getAvailableBiometrics();
-    } catch (_) {
-      return [];
     }
   }
 
@@ -153,7 +135,7 @@ class KiteBiometricService {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// WalletConnect provider — web-safe
+// WalletConnect provider — no-ops on web
 // ─────────────────────────────────────────────────────────────────────────────
 class KiteWalletProvider extends ChangeNotifier {
   ReownAppKitModal? _modal;
@@ -164,15 +146,14 @@ class KiteWalletProvider extends ChangeNotifier {
   bool get isConnected => _isConnected;
   String? get address => _address;
   String? get chainId => _chainId;
-  ReownAppKitModal? get modal => _modal;
 
   String get displayAddress {
     if (_address == null || _address!.length < 10) return '';
-    return '${_address!.substring(0, 6)}…${_address!.substring(_address!.length - 4)}';
+    return '${_address!.substring(0, 6)}...${_address!.substring(_address!.length - 4)}';
   }
 
   Future<void> init(BuildContext context) async {
-    if (kIsWeb) return; // reown_appkit does not support web
+    if (kIsWeb) return;
     try {
       _modal = ReownAppKitModal(
         context: context,
@@ -190,17 +171,10 @@ class KiteWalletProvider extends ChangeNotifier {
             universal: 'https://kitepay.app/wc',
           ),
         ),
-        featuredWalletIds: {
-          'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
-          '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',
-          'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa',
-        },
       );
-
       _modal!.onModalConnect.subscribe(_onConnect);
       _modal!.onModalDisconnect.subscribe(_onDisconnect);
       _modal!.onModalNetworkChange.subscribe(_onNetworkChange);
-
       await _modal!.init();
       notifyListeners();
     } catch (e) {
@@ -216,8 +190,6 @@ class KiteWalletProvider extends ChangeNotifier {
         ?.split(':')
         .last;
     _chainId = _modal?.selectedChain?.chainId;
-    KiteAnalytics.logEvent(
-        'wallet_connected', {'chain': _chainId ?? 'unknown'});
     notifyListeners();
   }
 
@@ -225,7 +197,6 @@ class KiteWalletProvider extends ChangeNotifier {
     _isConnected = false;
     _address = null;
     _chainId = null;
-    KiteAnalytics.logEvent('wallet_disconnected', null);
     notifyListeners();
   }
 
@@ -235,7 +206,7 @@ class KiteWalletProvider extends ChangeNotifier {
   }
 
   Future<void> openModal(BuildContext context) async {
-    if (kIsWeb) return; // reown_appkit does not support web
+    if (kIsWeb) return;
     if (_modal == null) await init(context);
     _modal?.openModalView();
   }
@@ -262,7 +233,6 @@ class KiteWalletProvider extends ChangeNotifier {
 class KiteThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode;
   KiteThemeProvider(ThemeMode initial) : _themeMode = initial;
-
   ThemeMode get themeMode => _themeMode;
 
   Future<void> setThemeMode(ThemeMode mode) async {
@@ -279,7 +249,6 @@ class KiteThemeProvider extends ChangeNotifier {
 class KiteLocaleProvider extends ChangeNotifier {
   Locale _locale;
   KiteLocaleProvider(Locale initial) : _locale = initial;
-
   Locale get locale => _locale;
 
   static const List<Locale> supportedLocales = [
@@ -304,13 +273,12 @@ class KiteLocaleProvider extends ChangeNotifier {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Catch all Flutter framework errors
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint('Flutter error: ${details.exception}\n${details.stack}');
   };
 
-  // ── Firebase (web + mobile) ───────────────────────────────────────────────
+  // Firebase
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -327,21 +295,19 @@ void main() async {
     debugPrint('Firebase init error: $e');
   }
 
-  // ── Persisted preferences ─────────────────────────────────────────────────
+  // Preferences
   final prefs = await SharedPreferences.getInstance();
-
   final savedTheme = prefs.getString(KitePrefsKeys.themeMode);
   final initialThemeMode = switch (savedTheme) {
     'light' => ThemeMode.light,
     'system' => ThemeMode.system,
     _ => ThemeMode.dark,
   };
-
   final savedLocale = prefs.getString(KitePrefsKeys.locale);
   final initialLocale =
       savedLocale != null ? Locale(savedLocale) : const Locale('en');
 
-  // ── System UI (mobile only) ───────────────────────────────────────────────
+  // System UI
   if (!kIsWeb) {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -362,34 +328,7 @@ void main() async {
             create: (_) => KiteThemeProvider(initialThemeMode)),
         ChangeNotifierProvider(
             create: (_) => KiteLocaleProvider(initialLocale)),
-        ChangeNotifierProvider(
-          create: (_) => TurnkeyProvider(
-            config: TurnkeyConfig(
-              apiBaseUrl: 'https://api.turnkey.com',
-              organizationId: const String.fromEnvironment(
-                'TURNKEY_ORG_ID',
-                defaultValue: '725d7232-944c-4a2e-b71f-30997b3868a4',
-              ),
-              authProxyConfigId: const String.fromEnvironment(
-                'TURNKEY_AUTH_PROXY_CONFIG_ID',
-                defaultValue: 'c5558d8d-6ee3-4a70-aebb-dc40d40116df',
-              ),
-              appScheme: 'kitepay',
-              onSessionCreated: (_) => debugPrint('✅ Session created'),
-              onSessionSelected: (_) => debugPrint('🔄 Session selected'),
-              onSessionExpired: (_) => debugPrint('⚠️  Session expired'),
-              onSessionCleared: (_) => debugPrint('🗑  Session cleared'),
-              onInitialized: (err) =>
-                  debugPrint(err?.toString() ?? '🚀 Turnkey initialized'),
-            ),
-          ),
-        ),
-        ChangeNotifierProxyProvider<TurnkeyProvider, KiteAgentService>(
-          create: (ctx) => KiteAgentService(ctx.read<TurnkeyProvider>()),
-          update: (_, tk, prev) => prev ?? KiteAgentService(tk),
-        ),
-        // KiteWalletProvider registered on all platforms;
-        // all reown_appkit calls are guarded with kIsWeb checks internally
+        ChangeNotifierProvider(create: (_) => KiteAgentService()),
         ChangeNotifierProvider(create: (_) => KiteWalletProvider()),
       ],
       child: const KitePayApp(),
@@ -664,7 +603,6 @@ class _AuthGateState extends State<AuthGate>
     super.initState();
     _ctrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1800));
-
     _logoScale = Tween<double>(begin: 0.6, end: 1.0).animate(CurvedAnimation(
         parent: _ctrl,
         curve: const Interval(0.0, 0.55, curve: Curves.elasticOut)));
@@ -678,7 +616,6 @@ class _AuthGateState extends State<AuthGate>
         .animate(CurvedAnimation(
             parent: _ctrl,
             curve: const Interval(0.45, 0.75, curve: Curves.easeOut)));
-
     _ctrl.forward();
     _bootstrap();
   }
@@ -691,20 +628,16 @@ class _AuthGateState extends State<AuthGate>
 
   Future<void> _bootstrap() async {
     try {
-      final turnkey = context.read<TurnkeyProvider>();
-      await turnkey.ready;
       await Future.delayed(const Duration(milliseconds: 1900));
       if (!mounted) return;
 
       final prefs = await SharedPreferences.getInstance();
 
-      // Onboarding
       if (!(prefs.getBool(KitePrefsKeys.onboardingComplete) ?? false)) {
         _go(const OnboardingScreen());
         return;
       }
 
-      // Biometrics (skip on web)
       if (!kIsWeb && (prefs.getBool(KitePrefsKeys.biometricEnabled) ?? false)) {
         final ok = await KiteBiometricService.authenticate(
             localizedReason: 'Unlock KitePay to continue');
@@ -713,12 +646,9 @@ class _AuthGateState extends State<AuthGate>
           _go(const LoginScreen());
           return;
         }
-        await KiteAnalytics.logEvent('biometric_auth', {'result': 'success'});
       }
 
-      final session = await turnkey.getSession();
-      if (!mounted) return;
-      _go(session != null ? const HomeScreen() : const LoginScreen());
+      _go(const LoginScreen());
     } catch (e) {
       debugPrint('Bootstrap error: $e');
       if (mounted) _go(const LoginScreen());
@@ -801,7 +731,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         icon: Icons.shield_rounded,
         title: 'Bank-Grade Security',
         body:
-            "Your assets are protected by Turnkey's institutional-grade key management and biometric locks.",
+            "Your assets are protected by institutional-grade key management and biometric locks.",
         gradient: [KiteColors.gold300, KiteColors.gold400]),
     _OBPage(
         icon: Icons.auto_graph_rounded,
@@ -1116,7 +1046,7 @@ class KiteWalletConnectButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb) return const SizedBox.shrink(); // hidden on web
+    if (kIsWeb) return const SizedBox.shrink();
     final wallet = context.watch<KiteWalletProvider>();
     return GestureDetector(
       onTap: () => wallet.openModal(context),

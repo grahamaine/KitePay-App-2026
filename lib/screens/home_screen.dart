@@ -8,7 +8,7 @@ import '../services/agent_service.dart';
 import 'login_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HomeScreen — bottom nav shell (Home tab + Wallet tab)
+// HomeScreen — bottom nav shell
 // ─────────────────────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,14 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _DashboardTab(),
     WalletScreen(),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<KiteAgentService>().refreshWallets();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Dashboard tab (original home content)
+// Dashboard tab
 // ─────────────────────────────────────────────────────────────────────────────
 class _DashboardTab extends StatefulWidget {
   const _DashboardTab();
@@ -89,9 +81,8 @@ class _DashboardTabState extends State<_DashboardTab> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          success ? '✅ Wallet created!' : agent.lastError ?? 'Failed.',
-        ),
+        content:
+            Text(success ? '✅ Wallet created!' : agent.lastError ?? 'Failed.'),
         backgroundColor: success ? Colors.green.shade700 : Colors.red.shade700,
       ),
     );
@@ -101,16 +92,7 @@ class _DashboardTabState extends State<_DashboardTab> {
   Widget build(BuildContext context) {
     final agent = context.watch<KiteAgentService>();
     final theme = Theme.of(context);
-
-    final dynamic user = agent.user;
-    final List<dynamic> wallets = agent.wallets ?? [];
-
-    final String userName =
-        (user is Map ? user['userName'] ?? user['username'] ?? '' : '')
-            .toString();
-    final String userEmail =
-        (user is Map ? user['userEmail'] ?? user['email'] ?? '' : '')
-            .toString();
+    final wallets = agent.wallets ?? [];
 
     return Scaffold(
       backgroundColor: KiteColors.navy900,
@@ -118,7 +100,6 @@ class _DashboardTabState extends State<_DashboardTab> {
         title: const Text('KitePay'),
         centerTitle: false,
         actions: [
-          // WalletConnect button in app bar
           const KiteWalletConnectButton(),
           IconButton(
             icon: const Icon(Icons.logout),
@@ -132,26 +113,41 @@ class _DashboardTabState extends State<_DashboardTab> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Greeting
-            if (userName.isNotEmpty) ...[
-              Text(
-                'Hi, $userName 👋',
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-            ],
-            if (userEmail.isNotEmpty) ...[
-              Text(
-                userEmail,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            // Welcome banner
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [KiteColors.navy800, KiteColors.navy700],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: KiteColors.navy700, width: 1),
               ),
-              const SizedBox(height: 28),
-            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome to KitePay 👋',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: KiteColors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Fly further with every payment',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: KiteColors.grey400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
 
-            // Wallets section header
+            // Wallets section
             Row(
               children: [
                 Text(
@@ -173,9 +169,7 @@ class _DashboardTabState extends State<_DashboardTab> {
             else if (wallets.isEmpty)
               _EmptyWalletsCard(onTap: _handleCreateWallet)
             else
-              ...wallets.map(
-                (w) => _WalletCard(wallet: w as Map<String, dynamic>),
-              ),
+              ...wallets.map((w) => _WalletCard(wallet: w)),
 
             const SizedBox(height: 20),
 
@@ -205,23 +199,25 @@ class _EmptyWalletsCard extends StatelessWidget {
     return Card(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             children: [
-              Icon(Icons.account_balance_wallet_outlined,
-                  size: 48, color: theme.colorScheme.primary),
+              const Icon(Icons.account_balance_wallet_outlined,
+                  size: 48, color: KiteColors.cyan400),
               const SizedBox(height: 12),
-              Text('No wallets yet',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                'No wallets yet',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Text(
                 'Tap to create your first EVM wallet',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: KiteColors.grey400),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -241,15 +237,12 @@ class _WalletCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     final String name =
         (wallet['walletName'] ?? wallet['name'] ?? 'Wallet').toString();
-
     final accounts = wallet['accounts'] as List?;
     final String address = accounts != null && accounts.isNotEmpty
         ? (accounts.first['address'] ?? '—').toString()
         : '—';
-
     final String shortAddress = address.length > 20
         ? '${address.substring(0, 10)}…${address.substring(address.length - 8)}'
         : address;
@@ -259,9 +252,9 @@ class _WalletCard extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.primaryContainer,
-          child: Icon(Icons.account_balance_wallet,
-              color: theme.colorScheme.primary),
+          backgroundColor: KiteColors.cyan400.withValues(alpha: 0.15),
+          child: const Icon(Icons.account_balance_wallet,
+              color: KiteColors.cyan400),
         ),
         title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(
