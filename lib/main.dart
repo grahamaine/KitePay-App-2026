@@ -15,7 +15,10 @@ import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/agent_service.dart';
+import 'services/identity_service.dart';
 import 'services/kite_chain_service.dart';
+import 'services/usdc_service.dart';
+import 'services/x402_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Brand tokens
@@ -47,7 +50,6 @@ class KitePrefsKeys {
   static const String onboardingComplete = 'onboarding_complete';
   static const String themeMode = 'theme_mode';
   static const String locale = 'locale';
-  static const String biometricEnabled = 'biometric_enabled';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -198,6 +200,12 @@ void main() async {
             create: (_) => KiteLocaleProvider(initialLocale)),
         ChangeNotifierProvider(create: (_) => KiteAgentService()),
         ChangeNotifierProvider(create: (_) => KiteChainService()),
+        ChangeNotifierProvider(create: (_) => UsdcService()..initialize()),
+        ChangeNotifierProxyProvider<UsdcService, X402Service>(
+          create: (ctx) => X402Service(ctx.read<UsdcService>()),
+          update: (_, usdc, prev) => prev ?? X402Service(usdc),
+        ),
+        ChangeNotifierProvider(create: (_) => IdentityService()..initialize()),
       ],
       child: const KitePayApp(),
     ),
