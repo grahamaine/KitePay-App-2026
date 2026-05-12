@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../main.dart' show KiteColors;
 import '../screens/wallet_screen.dart';
 import '../services/agent_service.dart';
-import 'agent_screen.dart';
+import '../services/agent_screen.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,10 +17,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  static const _tabs = [
-    _DashboardTab(),
-    WalletScreen(),
-    AgentScreen(),
+  static final _tabs = [
+    const _DashboardTab(),
+    const WalletScreen(),
+    const AgentScreen(),
   ];
 
   @override
