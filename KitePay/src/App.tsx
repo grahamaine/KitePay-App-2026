@@ -55,13 +55,16 @@ function HomeDashboard({
   onGetBalance,
   onKiteBalance,
   onModal,
+  address,
 }: {
   nativeBalance: string
   kiteBalance: string
   onGetBalance: () => void
   onKiteBalance: (b: string) => void
   onModal: (m: Modal) => void
+  address: string | undefined
 }) {
+  const connected = !!address
   return (
     <main className="dashboard">
       <div className="dashboard__left">
@@ -81,10 +84,15 @@ function HomeDashboard({
             <img src="/logo.png" alt="" className="passport-card__logo" />
             <div>
               <p className="passport-card__title">Kite Passport</p>
-              <span className="passport-card__status">Active</span>
+              <span className={`passport-card__status ${connected ? 'passport-card__status--active' : 'passport-card__status--disconnected'}`}>
+                {connected ? 'Active' : 'Disconnected'}
+              </span>
             </div>
           </div>
           <p className="passport-card__tagline">Elevate every payment</p>
+          {connected && (
+            <p className="passport-card__address">{address.slice(0, 6)}…{address.slice(-4)}</p>
+          )}
           <div className="passport-card__glow" />
         </div>
       </div>
@@ -125,6 +133,7 @@ function Dashboard() {
           onGetBalance={handleGetBalance}
           onKiteBalance={setKiteBalance}
           onModal={setModal}
+          address={address}
         />
       )
     }
