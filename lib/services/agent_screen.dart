@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../main.dart' show KiteColors;
+import '../main.dart' show KiteColors;
 import '../services/agent_service.dart';
 import '../services/identity_service.dart';
 import '../services/kite_chain_service.dart';
@@ -22,7 +22,6 @@ class _AgentScreenState extends State<AgentScreen>
   double _usdcBalance = 0.0;
   bool _loadingBalance = false;
 
-  // Demo task state
   bool _taskRunning = false;
   String _taskLog = '';
   String _taskUrl =
@@ -48,11 +47,12 @@ class _AgentScreenState extends State<AgentScreen>
     if (address == null) return;
     setState(() => _loadingBalance = true);
     final bal = await usdc.getBalance(address);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _usdcBalance = bal;
         _loadingBalance = false;
       });
+    }
   }
 
   String? _getAddress(KiteAgentService agent) {
@@ -72,9 +72,11 @@ class _AgentScreenState extends State<AgentScreen>
       _appendLog('No wallet found. Create one first.');
       return;
     }
+
     final accounts = wallets.first['accounts'] as List?;
     final privateKey = accounts?.first['privateKey']?.toString();
     final address = _getAddress(agent);
+
     if (privateKey == null || address == null) {
       _appendLog('Wallet key unavailable.');
       return;
@@ -157,7 +159,7 @@ class _AgentScreenState extends State<AgentScreen>
       body: TabBarView(
         controller: _tabs,
         children: [
-          // ── Tab 1: Agent runner ──────────────────────────────────────────
+          // ── Tab 1: Agent runner ────────────────────────────────────────
           SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -192,10 +194,12 @@ class _AgentScreenState extends State<AgentScreen>
                                 ?.copyWith(color: KiteColors.grey400)),
                         const SizedBox(height: 8),
                         GestureDetector(
-                          onTap: () => launchUrl(Uri.parse(
-                              '${kite.explorerTxUrl}${identity.identity!.attestationTxHash}')),
+                          onTap: () =>
+                              launchUrl(Uri.parse('${kite.explorerTxUrl}'
+                                  '${identity.identity!.attestationTxHash}')),
                           child: Text(
-                            'Attestation: ${identity.identity!.attestationTxHash.substring(0, 18)}...',
+                            'Attestation: '
+                            '${identity.identity!.attestationTxHash.substring(0, 18)}...',
                             style: const TextStyle(
                                 color: KiteColors.cyan400, fontSize: 12),
                           ),
@@ -246,9 +250,11 @@ class _AgentScreenState extends State<AgentScreen>
                                   ?.copyWith(color: KiteColors.grey400)),
                           const SizedBox(height: 6),
                           Text(
-                              '${usdc.spentToday.toStringAsFixed(4)} / ${usdc.dailyLimit} USDC',
-                              style: theme.textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold)),
+                            '${usdc.spentToday.toStringAsFixed(4)}'
+                            ' / ${usdc.dailyLimit} USDC',
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
                           const SizedBox(height: 6),
                           LinearProgressIndicator(
                             value: usdc.dailyLimit > 0
@@ -352,9 +358,8 @@ class _AgentScreenState extends State<AgentScreen>
                                   ?.copyWith(color: KiteColors.cyan400)),
                           const Spacer(),
                           GestureDetector(
-                            onTap: () {
-                              Clipboard.setData(ClipboardData(text: _taskLog));
-                            },
+                            onTap: () => Clipboard.setData(
+                                ClipboardData(text: _taskLog)),
                             child: const Icon(Icons.copy_outlined,
                                 size: 14, color: KiteColors.grey400),
                           ),
@@ -376,7 +381,7 @@ class _AgentScreenState extends State<AgentScreen>
             ),
           ),
 
-          // ── Tab 2: Activity log ──────────────────────────────────────────
+          // ── Tab 2: Activity log ──────────────────────────────────────
           x402.history.isEmpty
               ? Center(
                   child: Column(
@@ -402,7 +407,7 @@ class _AgentScreenState extends State<AgentScreen>
                       _ActivityTile(tx: x402.history[i], kite: kite),
                 ),
 
-          // ── Tab 3: Settings ──────────────────────────────────────────────
+          // ── Tab 3: Settings ──────────────────────────────────────────
           _AgentSettingsTab(
             address: address,
             onIdentityCreated: () => setState(() {}),
@@ -413,7 +418,7 @@ class _AgentScreenState extends State<AgentScreen>
   }
 }
 
-// ── Settings tab ─────────────────────────────────────────────────────────────
+// ── Settings tab ──────────────────────────────────────────────────────────────
 class _AgentSettingsTab extends StatefulWidget {
   final String? address;
   final VoidCallback onIdentityCreated;
@@ -528,7 +533,8 @@ class _AgentSettingsTabState extends State<_AgentSettingsTab> {
                   size: 16, color: KiteColors.grey400),
               const SizedBox(width: 8),
               Text(
-                'Remaining today: ${usdc.remainingToday.toStringAsFixed(2)} USDC',
+                'Remaining today: '
+                '${usdc.remainingToday.toStringAsFixed(2)} USDC',
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: KiteColors.grey400),
               ),
@@ -562,7 +568,7 @@ class _AgentSettingsTabState extends State<_AgentSettingsTab> {
   }
 }
 
-// ── Supporting widgets ────────────────────────────────────────────────────────
+// ── Reusable widgets ──────────────────────────────────────────────────────────
 class _Card extends StatelessWidget {
   final Widget child;
   const _Card({required this.child});
@@ -648,30 +654,25 @@ class _ActivityTile extends StatelessWidget {
     final uri = Uri.tryParse(tx.url);
     final host = uri?.host ?? tx.url;
 
+    final statusColor = tx.succeeded
+        ? Colors.green
+        : tx.errorMessage != null
+            ? Colors.red
+            : Colors.orange;
+
+    final statusIcon = tx.succeeded
+        ? Icons.check_rounded
+        : tx.errorMessage != null
+            ? Icons.error_outline
+            : Icons.pending_outlined;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: (tx.succeeded
-                  ? Colors.green
-                  : tx.errorMessage != null
-                      ? Colors.red
-                      : Colors.orange)
-              .withValues(alpha: 0.15),
-          child: Icon(
-            tx.succeeded
-                ? Icons.check_rounded
-                : tx.errorMessage != null
-                    ? Icons.error_outline
-                    : Icons.pending_outlined,
-            color: tx.succeeded
-                ? Colors.green
-                : tx.errorMessage != null
-                    ? Colors.red
-                    : Colors.orange,
-            size: 18,
-          ),
+          backgroundColor: statusColor.withValues(alpha: 0.15),
+          child: Icon(statusIcon, color: statusColor, size: 18),
         ),
         title: Text(host,
             style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),
@@ -680,9 +681,11 @@ class _ActivityTile extends StatelessWidget {
           children: [
             if (tx.paymentRequired != null)
               Text(
-                  '${tx.paymentRequired!.amount} ${tx.paymentRequired!.currency} paid',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: KiteColors.cyan400)),
+                '${tx.paymentRequired!.amount} '
+                '${tx.paymentRequired!.currency} paid',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: KiteColors.cyan400),
+              ),
             Text(
               tx.startedAt.toIso8601String().substring(11, 19),
               style: theme.textTheme.bodySmall

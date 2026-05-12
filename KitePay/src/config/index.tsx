@@ -1,24 +1,44 @@
-import { mainnet, arbitrum, sepolia } from '@reown/appkit/networks'
+import { sepolia } from '@reown/appkit/networks'
 import type { AppKitNetwork } from '@reown/appkit/networks'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 
-// Get projectId from https://dashboard.reown.com
-export const projectId = import.meta.env.VITE_PROJECT_ID || "b56e18d47c72ab683b10814fe9495694" // this is a public projectId only to use on localhost
+export const projectId = import.meta.env.VITE_PROJECT_ID || "b56e18d47c72ab683b10814fe9495694"
 
 if (!projectId) {
   throw new Error('Project ID is not defined')
 }
 
-// Create a metadata object - optional
 export const metadata = {
-  name: 'AppKit',
-  description: 'AppKit Example',
-  url: 'https://reown.com', // origin must match your domain & subdomain
-  icons: ['https://avatars.githubusercontent.com/u/179229932']
+  name: 'KitePay',
+  description: 'KitePay — Fly further with every payment',
+  url: 'https://kitepaygateway.com',
+  icons: ['https://avatars.githubusercontent.com/u/179229932'],
 }
 
-// for custom networks visit -> https://docs.reown.com/appkit/react/core/custom-networks
-export const networks = [mainnet, arbitrum, sepolia] as [AppKitNetwork, ...AppKitNetwork[]]
+export const kiteTestnet: AppKitNetwork = {
+  id: 2368,
+  name: 'Kite Testnet',
+  nativeCurrency: { name: 'KITE', symbol: 'KITE', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://rpc-testnet.gokite.ai'] },
+  },
+  blockExplorers: {
+    default: { name: 'KiteScan', url: 'https://testnet.kitescan.ai' },
+  },
+}
 
-// Set up Solana Adapter
-export const ethersAdapter = new EthersAdapter();
+export const kiteMainnet: AppKitNetwork = {
+  id: 2366,
+  name: 'Kite',
+  nativeCurrency: { name: 'KITE', symbol: 'KITE', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://rpc.gokite.ai'] },
+  },
+  blockExplorers: {
+    default: { name: 'KiteScan', url: 'https://kitescan.ai' },
+  },
+}
+
+export const networks = [kiteTestnet, kiteMainnet, sepolia] as [AppKitNetwork, ...AppKitNetwork[]]
+
+export const ethersAdapter = new EthersAdapter()

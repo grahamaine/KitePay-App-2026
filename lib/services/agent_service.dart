@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+import 'wallet_manager.dart';
+
 class KiteAgentService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final WalletManager _walletManager = WalletManager();
 
   bool _isLoading = false;
   String? _lastError;
@@ -13,6 +16,7 @@ class KiteAgentService extends ChangeNotifier {
   String? get verificationEmail => _verificationEmail;
   User? get currentUser => _auth.currentUser;
   bool get isLoggedIn => _auth.currentUser != null;
+  WalletManager get walletManager => _walletManager;
 
   Map<String, dynamic>? get user => _auth.currentUser == null
       ? null
@@ -21,7 +25,15 @@ class KiteAgentService extends ChangeNotifier {
           'userEmail': _auth.currentUser!.email ?? '',
         };
 
-  List<Map<String, dynamic>> get wallets => [];
+  // Now returns REAL wallets from secure storage
+  List<Map<String, dynamic>> get wallets =>
+      _walletManager.wallets.map((w) => w.toWalletMap()).toList();
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  Future<void> init() async {
+    await _walletManager.loadWallets();
+    notifyListeners();
+  }
 
   // ── Email OTP (send magic link) ───────────────────────────────────────────
   Future<bool> sendOtp(String email) async {
@@ -40,7 +52,6 @@ class KiteAgentService extends ChangeNotifier {
             password: _generateTempPassword(email),
           );
         }
-        // 'wrong-password' means user exists — proceed to send magic link
       }
 
       await _auth.sendSignInLinkToEmail(
@@ -75,6 +86,7 @@ class KiteAgentService extends ChangeNotifier {
     _lastError = null;
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
+      await _walletManager.loadWallets();
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
@@ -97,6 +109,8 @@ class KiteAgentService extends ChangeNotifier {
       final cred = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
       await cred.user?.updateDisplayName(displayName);
+      // Auto-create first wallet on signup
+      await _walletManager.generateWallet(name: '$displayName\'s Wallet');
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
@@ -110,14 +124,49 @@ class KiteAgentService extends ChangeNotifier {
     }
   }
 
-  // ── Wallet stubs ──────────────────────────────────────────────────────────
+  // ── Wallet operations ─────────────────────────────────────────────────────
   Future<bool> createEvmWallet({String walletName = 'KitePay Wallet'}) async {
-    _lastError = 'Wallet creation coming soon.';
-    notifyListeners();
-    return false;
+    _setLoading(true);
+    try {
+      await _walletManager.generateWallet(name: walletName);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _lastError = e.toString();
+      return false;
+    } finally {
+      _setLoading(false);
+    }
   }
 
-  Future<void> refreshWallets() async {}
+  Future<bool> importWallet({
+    required String privateKeyHex,
+    String name = 'Imported Wallet',
+  }) async {
+    _setLoading(true);
+    try {
+      final wallet = await _walletManager.importFromPrivateKey(
+        privateKeyHex: privateKeyHex,
+        name: name,
+      );
+      if (wallet == null) {
+        _lastError = 'Wallet already exists or invalid key.';
+        return false;
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _lastError = e.toString();
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> refreshWallets() async {
+    await _walletManager.loadWallets();
+    notifyListeners();
+  }
 
   // ── Logout ────────────────────────────────────────────────────────────────
   Future<void> logout() async {

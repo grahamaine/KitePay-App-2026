@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../main.dart' show KiteColors;
 import '../screens/wallet_screen.dart';
 import '../services/agent_service.dart';
+import 'agent_screen.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _tabs = [
     _DashboardTab(),
     WalletScreen(),
+    AgentScreen(),
   ];
 
   @override
@@ -42,6 +44,12 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIcon: Icon(Icons.account_balance_wallet_rounded,
                 color: KiteColors.cyan400),
             label: 'Wallet',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.smart_toy_outlined),
+            selectedIcon:
+                Icon(Icons.smart_toy_rounded, color: KiteColors.cyan400),
+            label: 'Agent',
           ),
         ],
       ),
@@ -77,6 +85,48 @@ class _DashboardTabState extends State<_DashboardTab> {
     );
   }
 
+  Future<void> _handleImportWallet() async {
+    final ctrl = TextEditingController();
+    final confirmed = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: KiteColors.navy800,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Import wallet'),
+        content: TextField(
+          controller: ctrl,
+          decoration: const InputDecoration(
+            labelText: 'Private key (0x...)',
+            hintText: '0xabc123...',
+          ),
+          obscureText: true,
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, ctrl.text),
+              child: const Text('Import')),
+        ],
+      ),
+    );
+
+    if (confirmed == null || confirmed.trim().isEmpty) return;
+    if (!mounted) return;
+
+    final agent = context.read<KiteAgentService>();
+    final success = await agent.importWallet(privateKeyHex: confirmed.trim());
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            success ? 'Wallet imported!' : agent.lastError ?? 'Import failed.'),
+        backgroundColor: success ? Colors.green.shade700 : Colors.red.shade700,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final agent = context.watch<KiteAgentService>();
@@ -101,6 +151,7 @@ class _DashboardTabState extends State<_DashboardTab> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            // Hero card
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -127,23 +178,32 @@ class _DashboardTabState extends State<_DashboardTab> {
               ),
             ),
             const SizedBox(height: 28),
+
+            // Wallets header
             Row(children: [
-              Text('Your Wallets',
+              Text('Your wallets',
                   style: theme.textTheme.titleLarge
                       ?.copyWith(fontWeight: FontWeight.bold)),
               const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.download_outlined),
+                tooltip: 'Import wallet',
+                onPressed: agent.isLoading ? null : _handleImportWallet,
+              ),
               IconButton(
                 icon: const Icon(Icons.refresh),
                 onPressed: agent.isLoading ? null : agent.refreshWallets,
               ),
             ]),
             const SizedBox(height: 12),
+
             if (agent.isLoading && wallets.isEmpty)
               const Center(child: CircularProgressIndicator())
             else if (wallets.isEmpty)
               _EmptyWalletsCard(onTap: _handleCreateWallet)
             else
               ...wallets.map((w) => _WalletCard(wallet: w)),
+
             const SizedBox(height: 20),
             if (wallets.isNotEmpty)
               OutlinedButton.icon(
