@@ -23,19 +23,28 @@ class KiteAgentService extends ChangeNotifier {
 
   List<Map<String, dynamic>> get wallets => [];
 
-  // ── Email OTP (send code) ─────────────────────────────────────────────────
+  // ── Email OTP (send magic link) ───────────────────────────────────────────
   Future<bool> sendOtp(String email) async {
     _setLoading(true);
     _lastError = null;
     try {
-      final methods = await _auth.fetchSignInMethodsForEmail(email);
-      if (methods.isEmpty) {
-        // New user — create account first
-        await _auth.createUserWithEmailAndPassword(
+      // Try signing in to check if user exists
+      try {
+        await _auth.signInWithEmailAndPassword(
           email: email,
           password: _generateTempPassword(email),
         );
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+          // New user — create placeholder account first
+          await _auth.createUserWithEmailAndPassword(
+            email: email,
+            password: _generateTempPassword(email),
+          );
+        }
+        // 'wrong-password' means user exists — proceed to send magic link
       }
+
       await _auth.sendSignInLinkToEmail(
         email: email,
         actionCodeSettings: ActionCodeSettings(
@@ -149,6 +158,7 @@ class KiteAgentService extends ChangeNotifier {
     return switch (code) {
       'user-not-found' => 'No account found with this email.',
       'wrong-password' => 'Incorrect password. Please try again.',
+      'invalid-credential' => 'Invalid credentials. Please try again.',
       'email-already-in-use' => 'An account already exists with this email.',
       'weak-password' => 'Password must be at least 6 characters.',
       'invalid-email' => 'Please enter a valid email address.',

@@ -81,7 +81,7 @@ class _DashboardTabState extends State<_DashboardTab> {
   Widget build(BuildContext context) {
     final agent = context.watch<KiteAgentService>();
     final theme = Theme.of(context);
-    final wallets = agent.wallets ?? [];
+    final wallets = agent.wallets;
 
     return Scaffold(
       backgroundColor: KiteColors.navy900,
