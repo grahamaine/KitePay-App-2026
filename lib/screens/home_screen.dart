@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../main.dart' show KiteColors, KiteWalletConnectButton;
+import '../main.dart' show KiteColors;
 import '../screens/wallet_screen.dart';
 import '../services/agent_service.dart';
 import 'login_screen.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HomeScreen — bottom nav shell
-// ─────────────────────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -29,10 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: KiteColors.navy900,
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _tabs,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _tabs),
       bottomNavigationBar: NavigationBar(
         backgroundColor: KiteColors.navy800,
         indicatorColor: KiteColors.cyan400.withValues(alpha: 0.15),
@@ -56,12 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Dashboard tab
-// ─────────────────────────────────────────────────────────────────────────────
 class _DashboardTab extends StatefulWidget {
   const _DashboardTab();
-
   @override
   State<_DashboardTab> createState() => _DashboardTabState();
 }
@@ -82,7 +71,7 @@ class _DashboardTabState extends State<_DashboardTab> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content:
-            Text(success ? '✅ Wallet created!' : agent.lastError ?? 'Failed.'),
+            Text(success ? 'Wallet created!' : agent.lastError ?? 'Failed.'),
         backgroundColor: success ? Colors.green.shade700 : Colors.red.shade700,
       ),
     );
@@ -100,7 +89,6 @@ class _DashboardTabState extends State<_DashboardTab> {
         title: const Text('KitePay'),
         centerTitle: false,
         actions: [
-          const KiteWalletConnectButton(),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',
@@ -113,7 +101,6 @@ class _DashboardTabState extends State<_DashboardTab> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Welcome banner
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -123,56 +110,41 @@ class _DashboardTabState extends State<_DashboardTab> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: KiteColors.navy700, width: 1),
+                border: Border.all(color: KiteColors.navy700),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Welcome to KitePay 👋',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: KiteColors.white,
-                    ),
-                  ),
+                  Text('Welcome to KitePay',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: KiteColors.white)),
                   const SizedBox(height: 8),
-                  Text(
-                    'Fly further with every payment',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: KiteColors.grey400,
-                    ),
-                  ),
+                  Text('Fly further with every payment',
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: KiteColors.grey400)),
                 ],
               ),
             ),
             const SizedBox(height: 28),
-
-            // Wallets section
-            Row(
-              children: [
-                Text(
-                  'Your Wallets',
+            Row(children: [
+              Text('Your Wallets',
                   style: theme.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: agent.isLoading ? null : agent.refreshWallets,
-                ),
-              ],
-            ),
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: agent.isLoading ? null : agent.refreshWallets,
+              ),
+            ]),
             const SizedBox(height: 12),
-
             if (agent.isLoading && wallets.isEmpty)
               const Center(child: CircularProgressIndicator())
             else if (wallets.isEmpty)
               _EmptyWalletsCard(onTap: _handleCreateWallet)
             else
               ...wallets.map((w) => _WalletCard(wallet: w)),
-
             const SizedBox(height: 20),
-
             if (wallets.isNotEmpty)
               OutlinedButton.icon(
                 onPressed: agent.isLoading ? null : _handleCreateWallet,
@@ -186,9 +158,6 @@ class _DashboardTabState extends State<_DashboardTab> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Empty wallets card
-// ─────────────────────────────────────────────────────────────────────────────
 class _EmptyWalletsCard extends StatelessWidget {
   final VoidCallback onTap;
   const _EmptyWalletsCard({required this.onTap});
@@ -202,34 +171,25 @@ class _EmptyWalletsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              const Icon(Icons.account_balance_wallet_outlined,
-                  size: 48, color: KiteColors.cyan400),
-              const SizedBox(height: 12),
-              Text(
-                'No wallets yet',
+          child: Column(children: [
+            const Icon(Icons.account_balance_wallet_outlined,
+                size: 48, color: KiteColors.cyan400),
+            const SizedBox(height: 12),
+            Text('No wallets yet',
                 style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Tap to create your first EVM wallet',
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('Tap to create your first EVM wallet',
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: KiteColors.grey400),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+                textAlign: TextAlign.center),
+          ]),
         ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Wallet card
-// ─────────────────────────────────────────────────────────────────────────────
 class _WalletCard extends StatelessWidget {
   final Map<String, dynamic> wallet;
   const _WalletCard({required this.wallet});
@@ -244,7 +204,7 @@ class _WalletCard extends StatelessWidget {
         ? (accounts.first['address'] ?? '—').toString()
         : '—';
     final String shortAddress = address.length > 20
-        ? '${address.substring(0, 10)}…${address.substring(address.length - 8)}'
+        ? '${address.substring(0, 10)}...${address.substring(address.length - 8)}'
         : address;
 
     return Card(
@@ -257,13 +217,10 @@ class _WalletCard extends StatelessWidget {
               color: KiteColors.cyan400),
         ),
         title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(
-          shortAddress,
-          style: TextStyle(
-            fontFamily: 'monospace',
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-        ),
+        subtitle: Text(shortAddress,
+            style: TextStyle(
+                fontFamily: 'monospace',
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
         trailing: IconButton(
           icon: const Icon(Icons.copy_outlined),
           tooltip: 'Copy address',

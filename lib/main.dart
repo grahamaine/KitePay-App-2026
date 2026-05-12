@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:reown_appkit/reown_appkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
@@ -135,99 +134,6 @@ class KiteBiometricService {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// WalletConnect provider — no-ops on web
-// ─────────────────────────────────────────────────────────────────────────────
-class KiteWalletProvider extends ChangeNotifier {
-  ReownAppKitModal? _modal;
-  bool _isConnected = false;
-  String? _address;
-  String? _chainId;
-
-  bool get isConnected => _isConnected;
-  String? get address => _address;
-  String? get chainId => _chainId;
-
-  String get displayAddress {
-    if (_address == null || _address!.length < 10) return '';
-    return '${_address!.substring(0, 6)}...${_address!.substring(_address!.length - 4)}';
-  }
-
-  Future<void> init(BuildContext context) async {
-    if (kIsWeb) return;
-    try {
-      _modal = ReownAppKitModal(
-        context: context,
-        projectId: const String.fromEnvironment(
-          'WALLETCONNECT_PROJECT_ID',
-          defaultValue: '330707bcc383f56d2f8710e23161f96b',
-        ),
-        metadata: const PairingMetadata(
-          name: 'KitePay',
-          description: 'Fly further with every payment',
-          url: 'https://kitepay.app',
-          icons: ['https://kitepay.app/icon.png'],
-          redirect: Redirect(
-            native: 'kitepay://',
-            universal: 'https://kitepay.app/wc',
-          ),
-        ),
-      );
-      _modal!.onModalConnect.subscribe(_onConnect);
-      _modal!.onModalDisconnect.subscribe(_onDisconnect);
-      _modal!.onModalNetworkChange.subscribe(_onNetworkChange);
-      await _modal!.init();
-      notifyListeners();
-    } catch (e) {
-      debugPrint('WalletConnect init error: $e');
-    }
-  }
-
-  void _onConnect(ModalConnect? event) {
-    _isConnected = true;
-    _address = event?.session.namespaces?.values
-        .expand((ns) => ns.accounts)
-        .firstOrNull
-        ?.split(':')
-        .last;
-    _chainId = _modal?.selectedChain?.chainId;
-    notifyListeners();
-  }
-
-  void _onDisconnect(ModalDisconnect? event) {
-    _isConnected = false;
-    _address = null;
-    _chainId = null;
-    notifyListeners();
-  }
-
-  void _onNetworkChange(ModalNetworkChange? event) {
-    _chainId = event?.chainId;
-    notifyListeners();
-  }
-
-  Future<void> openModal(BuildContext context) async {
-    if (kIsWeb) return;
-    if (_modal == null) await init(context);
-    _modal?.openModalView();
-  }
-
-  Future<void> disconnect() async {
-    if (kIsWeb) return;
-    await _modal?.disconnect();
-  }
-
-  @override
-  void dispose() {
-    if (!kIsWeb) {
-      _modal?.onModalConnect.unsubscribe(_onConnect);
-      _modal?.onModalDisconnect.unsubscribe(_onDisconnect);
-      _modal?.onModalNetworkChange.unsubscribe(_onNetworkChange);
-    }
-    super.dispose();
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Theme provider
 // ─────────────────────────────────────────────────────────────────────────────
 class KiteThemeProvider extends ChangeNotifier {
@@ -329,7 +235,6 @@ void main() async {
         ChangeNotifierProvider(
             create: (_) => KiteLocaleProvider(initialLocale)),
         ChangeNotifierProvider(create: (_) => KiteAgentService()),
-        ChangeNotifierProvider(create: (_) => KiteWalletProvider()),
       ],
       child: const KitePayApp(),
     ),
@@ -731,7 +636,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         icon: Icons.shield_rounded,
         title: 'Bank-Grade Security',
         body:
-            "Your assets are protected by institutional-grade key management and biometric locks.",
+            'Your assets are protected by institutional-grade key management and biometric locks.',
         gradient: [KiteColors.gold300, KiteColors.gold400]),
     _OBPage(
         icon: Icons.auto_graph_rounded,
@@ -1036,71 +941,6 @@ class _GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter _) => false;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// WalletConnect button widget
-// ─────────────────────────────────────────────────────────────────────────────
-class KiteWalletConnectButton extends StatelessWidget {
-  const KiteWalletConnectButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    if (kIsWeb) return const SizedBox.shrink();
-    final wallet = context.watch<KiteWalletProvider>();
-    return GestureDetector(
-      onTap: () => wallet.openModal(context),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          color: wallet.isConnected
-              ? KiteColors.success.withValues(alpha: 0.15)
-              : KiteColors.navy700,
-          border: Border.all(
-              color:
-                  wallet.isConnected ? KiteColors.success : KiteColors.cyan400,
-              width: 1.5),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: wallet.isConnected
-                      ? KiteColors.success
-                      : KiteColors.grey400,
-                  boxShadow: wallet.isConnected
-                      ? [
-                          BoxShadow(
-                              color: KiteColors.success.withValues(alpha: 0.5),
-                              blurRadius: 6,
-                              spreadRadius: 1)
-                        ]
-                      : [])),
-          const SizedBox(width: 8),
-          Text(wallet.isConnected ? wallet.displayAddress : 'Connect Wallet',
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.2,
-                  color: wallet.isConnected
-                      ? KiteColors.success
-                      : KiteColors.cyan400)),
-          if (wallet.isConnected) ...[
-            const SizedBox(width: 6),
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                size: 16, color: KiteColors.success),
-          ],
-        ]),
-      ),
-    );
-  }
 }
 
 // ignore: unused_element
