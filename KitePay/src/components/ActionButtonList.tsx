@@ -1,14 +1,13 @@
 import { useDisconnect, useAppKit, useAppKitNetwork, useAppKitAccount, useAppKitProvider, useAppKitNetworkCore, type Provider } from '@reown/appkit/react'
 import { BrowserProvider, JsonRpcSigner, formatEther } from 'ethers'
-import { kiteTestnet, networks } from '../config'
+import { kiteTestnet } from '../config'
 
 interface ActionButtonListProps {
-  sendHash: (hash: string) => void
   sendSignMsg: (msg: string) => void
   sendBalance: (balance: string) => void
 }
 
-export const ActionButtonList = ({ sendHash, sendSignMsg, sendBalance }: ActionButtonListProps) => {
+export const ActionButtonList = ({ sendSignMsg, sendBalance }: ActionButtonListProps) => {
   const { disconnect } = useDisconnect()
   const { open } = useAppKit()
   const { chainId } = useAppKitNetworkCore()
