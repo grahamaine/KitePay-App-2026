@@ -223,33 +223,72 @@ function Dashboard() {
   )
 }
 
+const HEX_CHARS = '0123456789ABCDEF'
+const BRAND = 'KITEPAY'
+
 function SplashScreen({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<'enter' | 'pulse' | 'exit'>('enter');
-  const doneRef = useRef(false);
+  const [phase, setPhase] = useState<'boot' | 'reveal' | 'stable' | 'exit'>('boot')
+  const [scramble, setScramble] = useState('·······')
+  const [hexAddr, setHexAddr] = useState('0x????????????????')
+  const doneRef = useRef(false)
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('pulse'), 600);
-    const t2 = setTimeout(() => setPhase('exit'), 2400);
-    const t3 = setTimeout(() => { if (!doneRef.current) { doneRef.current = true; onDone(); } }, 3000);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [onDone]);
+    const t1 = setTimeout(() => setPhase('reveal'), 300)
+    const t2 = setTimeout(() => setPhase('stable'), 1500)
+    const t3 = setTimeout(() => setPhase('exit'), 2600)
+    const t4 = setTimeout(() => { if (!doneRef.current) { doneRef.current = true; onDone() } }, 3200)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4) }
+  }, [onDone])
+
+  // Hex address ticker
+  useEffect(() => {
+    const id = setInterval(() => {
+      setHexAddr('0x' + Array.from({ length: 16 }, () => HEX_CHARS[Math.floor(Math.random() * 16)]).join(''))
+    }, 90)
+    return () => clearInterval(id)
+  }, [])
+
+  // Scramble wordmark during reveal
+  useEffect(() => {
+    if (phase !== 'reveal') return
+    let frame = 0
+    const total = 22
+    const id = setInterval(() => {
+      frame++
+      const resolved = Math.floor((frame / total) * BRAND.length)
+      setScramble(BRAND.split('').map((ch, i) =>
+        i < resolved ? ch : HEX_CHARS[Math.floor(Math.random() * 16)]
+      ).join(''))
+      if (frame >= total) { setScramble(BRAND); clearInterval(id) }
+    }, 55)
+    return () => clearInterval(id)
+  }, [phase])
+
+  useEffect(() => {
+    if (phase === 'stable' || phase === 'exit') setScramble(BRAND)
+  }, [phase])
 
   return (
     <div className={`splash splash--${phase}`}>
-      <div className="splash__ring splash__ring--1" />
-      <div className="splash__ring splash__ring--2" />
-      <div className="splash__ring splash__ring--3" />
+      <div className="splash__grid" />
+      <div className="splash__scanline" />
       <img src="/logo.png" className="splash__logo" alt="KitePay" />
-      <p className="splash__wordmark">KITEPAY</p>
+      <p className="splash__wordmark">{scramble}</p>
+      <p className="splash__hex">{hexAddr}</p>
+      <div className="splash__status">
+        <span className="splash__cursor" />
+        <span>INITIALIZING SECURE CHANNEL</span>
+      </div>
     </div>
-  );
+  )
 }
 
 export function App() {
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(false)
+  const handleDone = React.useCallback(() => setReady(true), [])
   return (
     <>
-      {!ready && <SplashScreen onDone={() => setReady(true)} />}
+      {!ready && <SplashScreen onDone={handleDone} />}
       <div className={`app-wrapper ${ready ? 'app-wrapper--visible' : ''}`}>
         <Dashboard />
       </div>
