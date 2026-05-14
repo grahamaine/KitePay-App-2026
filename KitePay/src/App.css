@@ -50,12 +50,16 @@ body {
 /* ── Sidebar ────────────────────────────────────────────────────────────── */
 .sidebar {
   grid-row: 1 / 3;
-  background: var(--navy-800);
+  background: rgba(17,24,39,0.80);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
   overflow-y: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar__brand {
@@ -68,7 +72,7 @@ body {
 }
 
 .sidebar__logo { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; }
-.sidebar__name { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--white); }
+.sidebar__name { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--white); }
 
 .sidebar__nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
 .sidebar__bottom { border-top: 1px solid var(--glass-border); padding-top: 12px; }
@@ -82,16 +86,19 @@ body {
   border: none;
   background: transparent;
   color: var(--grey-400);
+  font-family: 'Oswald', sans-serif;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.18s ease;
   width: 100%;
   text-align: left;
 }
 .nav-item:hover { background: var(--glass-bg); color: var(--white); }
-.nav-item--active { background: var(--cyan-dim); color: var(--cyan); font-weight: 600; }
-.nav-item__icon { font-size: 18px; width: 22px; text-align: center; }
+.nav-item--active { background: var(--cyan-dim); color: var(--cyan); font-weight: 500; }
+.nav-item__icon { display: flex; align-items: center; width: 22px; }
 .nav-item__label { font-size: 14px; }
 
 /* ── Main area ──────────────────────────────────────────────────────────── */
@@ -735,11 +742,13 @@ body {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; gap: 3px; padding: 10px 4px;
     background: none; border: none; color: var(--grey-400);
-    font-size: 10px; font-weight: 500; cursor: pointer;
-    transition: color 0.15s;
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px; font-weight: 400;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; transition: color 0.15s;
   }
   .bottom-nav__item--active { color: var(--cyan); }
-  .bottom-nav__icon { font-size: 20px; }
+  .bottom-nav__icon { display: flex; align-items: center; justify-content: center; }
   .bottom-nav__label { font-size: 10px; }
   .main-area { padding-bottom: 64px; }
 }
@@ -799,3 +808,57 @@ body {
 
 .app-wrapper { opacity: 0; }
 .app-wrapper--visible { animation: app-fadein 0.5s ease forwards; }
+
+/* ── Animated background blobs ─────────────────────────────────────────── */
+@keyframes blob-drift-1 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  25%     { transform: translate(130px,90px) scale(1.12); }
+  50%     { transform: translate(70px,190px) scale(0.92); }
+  75%     { transform: translate(-70px,70px) scale(1.06); }
+}
+@keyframes blob-drift-2 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(-110px,-90px) scale(1.09); }
+  66%     { transform: translate(90px,-150px) scale(0.94); }
+}
+@keyframes blob-drift-3 {
+  0%,100% { transform: translate(-50%,-50%) scale(1); }
+  40%     { transform: translate(calc(-50% + 100px),calc(-50% - 80px)) scale(1.11); }
+  70%     { transform: translate(calc(-50% - 90px),calc(-50% + 110px)) scale(0.9); }
+}
+
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(110px);
+  will-change: transform;
+}
+.bg-blob--1 {
+  width: 680px; height: 680px;
+  background: radial-gradient(circle, rgba(0,194,212,0.18) 0%, transparent 70%);
+  top: -200px; right: -160px;
+  animation: blob-drift-1 30s ease-in-out infinite;
+}
+.bg-blob--2 {
+  width: 580px; height: 580px;
+  background: radial-gradient(circle, rgba(139,92,246,0.16) 0%, transparent 70%);
+  bottom: -150px; left: -120px;
+  animation: blob-drift-2 38s ease-in-out infinite;
+}
+.bg-blob--3 {
+  width: 460px; height: 460px;
+  background: radial-gradient(circle, rgba(0,194,212,0.10) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  animation: blob-drift-3 24s ease-in-out infinite;
+}
+
+.app-shell { position: relative; }
+.main-area { position: relative; z-index: 1; }
