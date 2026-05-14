@@ -1,5 +1,9 @@
 import { createAppKit, useAppKitAccount, useAppKitProvider, useAppKitNetworkCore, type Provider } from '@reown/appkit/react'
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import {
+  LayoutDashboard, ArrowUpDown, ShieldCheck, Zap, Target,
+  Hexagon, Settings, Home, SendHorizonal,
+} from 'lucide-react'
 import { BrowserProvider, formatEther } from 'ethers'
 import { networks, projectId, metadata, ethersAdapter } from './config'
 import { BalanceCard } from './components/BalanceCard'
@@ -40,13 +44,13 @@ const PAGE_TITLES: Record<Page, string> = {
   settings: 'Settings',
 }
 
-const NAV_ITEMS: { id: Page; icon: string; label: string }[] = [
-  { id: 'home', icon: '⊞', label: 'Home' },
-  { id: 'payments', icon: '↕', label: 'Payments' },
-  { id: 'security', icon: '🛡', label: 'Security' },
-  { id: 'degenerates', icon: '⚡', label: 'Degens' },
-  { id: 'maturity', icon: '◎', label: 'Maturity' },
-  { id: 'triella', icon: '◇', label: 'Triella' },
+const NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string }[] = [
+  { id: 'home',        icon: <LayoutDashboard size={17} />, label: 'Home'     },
+  { id: 'payments',    icon: <ArrowUpDown     size={17} />, label: 'Payments' },
+  { id: 'security',    icon: <ShieldCheck     size={17} />, label: 'Security' },
+  { id: 'degenerates', icon: <Zap             size={17} />, label: 'Degens'   },
+  { id: 'maturity',    icon: <Target          size={17} />, label: 'Maturity' },
+  { id: 'triella',     icon: <Hexagon         size={17} />, label: 'Triella'  },
 ]
 
 function HomeDashboard({
@@ -164,7 +168,7 @@ function Dashboard() {
             className={`nav-item ${page === 'settings' ? 'nav-item--active' : ''}`}
             onClick={() => setPage('settings')}
           >
-            <span className="nav-item__icon">⚙</span>
+            <span className="nav-item__icon"><Settings size={17} /></span>
             <span className="nav-item__label">Settings</span>
           </button>
         </div>
@@ -190,10 +194,10 @@ function Dashboard() {
       {/* Bottom nav (mobile) */}
       <nav className="bottom-nav">
         {[
-          { id: 'home' as Page, icon: '⊞', label: 'Home' },
-          { id: 'payments' as Page, icon: '↕', label: 'Payments' },
-          { id: 'degenerates' as Page, icon: '⚡', label: 'Degens' },
-          { id: 'settings' as Page, icon: '⚙', label: 'Settings' },
+          { id: 'home' as Page,        icon: <Home         size={20} />, label: 'Home'     },
+          { id: 'payments' as Page,    icon: <ArrowUpDown  size={20} />, label: 'Payments' },
+          { id: 'degenerates' as Page, icon: <Zap          size={20} />, label: 'Degens'   },
+          { id: 'settings' as Page,    icon: <Settings     size={20} />, label: 'Settings' },
         ].map(n => (
           <button
             key={n.id}
