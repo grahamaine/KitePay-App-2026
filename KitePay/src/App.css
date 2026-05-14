@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
 /* ── Brand tokens ───────────────────────────────────────────────────────── */
 :root {
   --navy-950: #060B18;
@@ -30,7 +32,7 @@
 html, body { height: 100%; overflow: hidden; }
 
 body {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Oswald', 'Segoe UI', system-ui, sans-serif;
   background: var(--navy-950);
   color: var(--white);
   -webkit-font-smoothing: antialiased;

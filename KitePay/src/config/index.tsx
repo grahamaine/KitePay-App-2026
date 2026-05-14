@@ -2,7 +2,7 @@ import { sepolia } from '@reown/appkit/networks'
 import type { AppKitNetwork } from '@reown/appkit/networks'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 
-export const projectId = import.meta.env.VITE_PROJECT_ID || "b56e18d47c72ab683b10814fe9495694"
+export const projectId = import.meta.env.VITE_PROJECT_ID || "330707bcc383f56d2f8710e23161f96b"
 
 if (!projectId) {
   throw new Error('Project ID is not defined')
@@ -11,8 +11,8 @@ if (!projectId) {
 export const metadata = {
   name: 'KitePay',
   description: 'KitePay — Fly further with every payment',
-  url: 'https://kitepaygateway.com',
-  icons: ['https://avatars.githubusercontent.com/u/179229932'],
+  url: 'https://kitepay.vercel.app',
+  icons: ['https://kitepay.vercel.app/icon-192.png'],
 }
 
 export const kiteTestnet: AppKitNetwork = {
