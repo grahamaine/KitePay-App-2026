@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KitePay Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0A0A0C;
+    --surface:  #111115;
+    --surface2: #18181F;
+    --surface3: #1F1F28;
+    --border:   #ffffff12;
+    --border2:  #ffffff20;
+    --border3:  #ffffff30;
+    --text:     #F2F0FF;
+    --muted:    #6B6A7A;
+    --subtle:   #9998A8;
+    --accent:   #6C5CE7;
+    --accent2:  #A29BFE;
+    --accent3:  #00D2D3;
+    --green:    #00B894;
+    --red:      #FF6B6B;
+    --amber:    #FDCB6E;
+    --orange:   #E17055;
+    --btc:      #F7931A;
+    --eth:      #627EEA;
+    --usdt:     #26A17B;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Sora', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── LAYOUT ── */
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 0 100px;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 36px 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600; color: #fff;
+    flex-shrink: 0;
+  }
+  .topbar-greet { font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 3px; }
+  .topbar-name  { font-size: 19px; font-weight: 600; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; font-size: 18px;
+    transition: background .2s;
+  }
+  .icon-btn:hover { background: var(--surface3); }
+  .notif-dot {
+    width: 8px; height: 8px; background: var(--red); border-radius: 50%;
+    position: absolute; top: 4px; right: 4px;
+    border: 2px solid var(--bg);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 32px 36px 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: start;
+  }
+  .hero-label { font-size: 12px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 10px; }
+  .hero-amount {
+    font-size: 52px; font-weight: 600; letter-spacing: -.03em;
+    line-height: 1; color: var(--text);
+  }
+  .hero-amount .currency { color: var(--accent2); font-size: 32px; vertical-align: super; }
+  .hero-amount .cents    { font-size: 28px; color: var(--subtle); }
+  .hero-change { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .badge-up {
+    background: #00B89420; color: var(--green);
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 500; font-family: 'DM Mono', monospace;
+  }
+  .hero-change-text { font-size: 13px; color: var(--subtle); }
+
+  /* mini donut */
+  .donut-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; padding-top: 6px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 6px; }
+  .legend-row { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--subtle); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── 2-COLUMN GRID ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 20px;
+    padding: 24px 36px 0;
+  }
+
+  /* ── BTC CARD ── */
+  .btc-card {
+    border-radius: 24px; padding: 26px; position: relative; overflow: hidden;
+    background: linear-gradient(140deg, #1A1A2E 0%, #16213E 55%, #0F3460 100%);
+    border: 1px solid var(--border2);
+    grid-column: 1 / -1;
+  }
+  .card-glow1 {
+    position: absolute; width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, #6C5CE750, transparent 70%);
+    top: -60px; right: -40px; pointer-events: none;
+  }
+  .card-glow2 {
+    position: absolute; width: 140px; height: 140px; border-radius: 50%;
+    background: radial-gradient(circle, #00D2D335, transparent 70%);
+    bottom: -30px; left: 30px; pointer-events: none;
+  }
+  .card-inner { position: relative; z-index: 1; }
+  .card-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 30px;
+  }
+  .card-type { font-size: 11px; color: #ffffff60; letter-spacing: .09em; text-transform: uppercase; margin-bottom: 8px; }
+  .card-logo { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: #fff; }
+  .card-logo-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--accent); display: flex; align-items: center;
+    justify-content: center; font-size: 13px;
+  }
+  .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .mastercard-circles { display: flex; }
+  .mc-circle {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #ffffff22;
+  }
+  .mc-circle:last-child { margin-left: -14px; background: #ffffff38; }
+  .card-network {
+    font-size: 10px; color: var(--accent3); background: #00D2D315;
+    padding: 4px 10px; border-radius: 20px; letter-spacing: .05em;
+  }
+  .card-body { display: flex; justify-content: space-between; align-items: flex-end; }
+  .card-btc {
+    font-size: 36px; font-weight: 600; color: #fff; margin-bottom: 6px;
+    font-family: 'DM Mono', monospace; letter-spacing: -.02em;
+  }
+  .card-usd { font-size: 14px; color: #ffffff70; font-family: 'DM Mono', monospace; }
+  .card-addr { font-size: 12px; color: #ffffff50; letter-spacing: .06em; font-family: 'DM Mono', monospace; }
+
+  /* ── ACTIONS ── */
+  .actions-col {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .actions-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .actions-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .action-btn {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 18px; padding: 18px 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    cursor: pointer; transition: background .2s, border-color .2s, transform .15s;
+  }
+  .action-btn:hover { background: var(--surface3); border-color: var(--border3); transform: translateY(-2px); }
+  .action-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .action-label { font-size: 12px; color: var(--subtle); font-weight: 400; }
+  .ai-send    { background: #6C5CE715; }
+  .ai-receive { background: #00B89415; }
+  .ai-swap    { background: #FDCB6E15; }
+  .ai-vault   { background: #A29BFE15; }
+
+  /* ── CHART ── */
+  .chart-col { display: flex; flex-direction: column; gap: 0; }
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 22px; padding: 22px; overflow: hidden; flex: 1;
+  }
+  .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .chart-title { font-size: 14px; font-weight: 500; }
+  .chart-tabs { display: flex; gap: 4px; }
+  .ctab {
+    font-size: 11px; padding: 5px 12px; border-radius: 20px;
+    cursor: pointer; font-weight: 500; transition: .15s; color: var(--muted);
+    border: none; background: transparent;
+  }
+  .ctab.active { background: var(--accent); color: #fff; }
+  .ctab:not(.active):hover { color: var(--text); }
+  .chart-svg { width: 100%; height: 110px; display: block; }
+  .chart-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .cstat { background: var(--surface2); border-radius: 10px; padding: 10px 12px; }
+  .cstat-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+  .cstat-val { font-size: 14px; font-weight: 500; font-family: 'DM Mono', monospace; }
+
+  /* ── ASSETS ── */
+  .section { padding: 24px 36px 0; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .section-title { font-size: 15px; font-weight: 500; }
+  .section-link { font-size: 12px; color: var(--accent2); cursor: pointer; }
+
+  .assets-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  }
+  .asset-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 18px;
+    transition: border-color .2s, transform .2s;
+    cursor: pointer;
+  }
+  .asset-card:hover { border-color: var(--border3); transform: translateY(-2px); }
+  .asset-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .asset-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .pct-up { color: var(--green); font-size: 12px; font-family: 'DM Mono', monospace; }
+  .pct-dn  { color: var(--red);   font-size: 12px; font-family: 'DM Mono', monospace; }
+  .asset-name  { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .asset-sym   { font-size: 11px; color: var(--muted); }
+  .asset-val   { font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; margin-bottom: 2px; }
+  .asset-qty   { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .mini-bar    { height: 3px; border-radius: 2px; margin-top: 14px; background: var(--surface3); }
+  .mini-bar-fill { height: 100%; border-radius: 2px; }
+
+  /* ── ACTIVITY + STATS ── */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 20px;
+    padding: 24px 36px 0;
+  }
+
+  .activity-list { display: flex; flex-direction: column; gap: 10px; }
+  .activity-row {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+    transition: border-color .2s;
+  }
+  .activity-row:hover { border-color: var(--border3); }
+  .activity-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .activity-info { flex: 1; }
+  .activity-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .activity-sub  { font-size: 11px; color: var(--muted); }
+  .activity-right { text-align: right; }
+  .activity-amt  { font-size: 13px; font-weight: 500; font-family: 'DM Mono', monospace; margin-bottom: 2px; }
+  .activity-status { font-size: 10px; color: var(--muted); }
+
+  .stats-col { display: flex; flex-direction: column; gap: 12px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 18px 20px; flex: 1;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .stat-val   { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .stat-sub   { font-size: 12px; color: var(--subtle); margin-top: 4px; }
+  .progress-track { height: 4px; background: var(--surface3); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+  .progress-fill  { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+  /* ── NAVBAR ── */
+  .navbar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 900px;
+    background: #111115EE; backdrop-filter: blur(24px);
+    border-top: 1px solid var(--border2);
+    display: flex; padding: 14px 0 22px;
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px; cursor: pointer;
+  }
+  .nav-icon  { font-size: 20px; }
+  .nav-label { font-size: 10px; color: var(--muted); transition: color .15s; }
+  .nav-item.active .nav-label { color: var(--accent2); }
+  .nav-pip { width: 4px; height: 4px; border-radius: 50%; background: var(--accent2); margin-top: 2px; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .topbar  { animation: fadeUp .5s ease both; }
+  .hero    { animation: fadeUp .5s .08s ease both; }
+  .main-grid { animation: fadeUp .5s .16s ease both; }
+  .section { animation: fadeUp .5s .24s ease both; }
+  .bottom-grid { animation: fadeUp .5s .32s ease both; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="avatar">AK</div>
+      <div>
+        <div class="topbar-greet">Good Morning</div>
+        <div class="topbar-name">Alex Kite</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn">🔍</div>
+      <div class="icon-btn" style="position:relative">
+        🔔
+        <div class="notif-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <div class="hero-label">Total Portfolio Value</div>
+      <div class="hero-amount">
+        <span class="currency">$</span>12,450<span class="cents">.82</span>
+      </div>
+      <div class="hero-change">
+        <span class="badge-up">▲ 4.2%</span>
+        <span class="hero-change-text">+$501.34 today</span>
+      </div>
+    </div>
+    <div class="donut-wrap">
+      <svg width="100" height="100" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#1F1F28" stroke-width="14"/>
+        <!-- BTC 79% -->
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#F7931A" stroke-width="14"
+          stroke-dasharray="189.1 239.1" stroke-dashoffset="0"
+          transform="rotate(-90 50 50)" stroke-linecap="round"/>
+        <!-- ETH 17% -->
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#627EEA" stroke-width="14"
+          stroke-dasharray="40.7 239.1" stroke-dashoffset="-189.1"
+          transform="rotate(-90 50 50)" stroke-linecap="round"/>
+        <!-- USDT 4% -->
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#26A17B" stroke-width="14"
+          stroke-dasharray="9.3 239.1" stroke-dashoffset="-229.8"
+          transform="rotate(-90 50 50)" stroke-linecap="round"/>
+        <text x="50" y="46" text-anchor="middle" fill="#F2F0FF" font-size="13" font-family="Sora" font-weight="600">3</text>
+        <text x="50" y="60" text-anchor="middle" fill="#6B6A7A" font-size="9" font-family="Sora">assets</text>
+      </svg>
+      <div class="donut-legend">
+        <div class="legend-row"><div class="legend-dot" style="background:#F7931A"></div>BTC 79%</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#627EEA"></div>ETH 17%</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#26A17B"></div>USDT 4%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID: Card + Actions + Chart -->
+  <div class="main-grid" style="grid-template-columns: 1.1fr 0.9fr; grid-template-rows: auto auto;">
+
+    <!-- BTC Card (full width) -->
+    <div class="btc-card" style="grid-column: 1 / -1;">
+      <div class="card-glow1"></div>
+      <div class="card-glow2"></div>
+      <div class="card-inner">
+        <div class="card-top">
+          <div>
+            <div class="card-type">Bitcoin Wallet</div>
+            <div class="card-logo">
+              <div class="card-logo-icon">₿</div>
+              KitePay
+            </div>
+          </div>
+          <div class="card-right">
+            <div class="mastercard-circles">
+              <div class="mc-circle"></div>
+              <div class="mc-circle"></div>
+            </div>
+            <div class="card-network">Mainnet Live</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div>
+            <div class="card-btc">0.14823 BTC</div>
+            <div class="card-usd">≈ $9,841.20 USD</div>
+          </div>
+          <div class="card-addr">bc1qxy2kgdygjrsqtzq2n0yrf2493p8...8842</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div style="font-size:14px; font-weight:500; color:var(--text);">Quick Actions</div>
+      <div class="actions-grid">
+        <div class="action-btn">
+          <div class="action-icon ai-send">📤</div>
+          <span class="action-label">Send</span>
+        </div>
+        <div class="action-btn">
+          <div class="action-icon ai-receive">📥</div>
+          <span class="action-label">Receive</span>
+        </div>
+        <div class="action-btn">
+          <div class="action-icon ai-swap">🔄</div>
+          <span class="action-label">Swap</span>
+        </div>
+        <div class="action-btn">
+          <div class="action-icon ai-vault">🔒</div>
+          <span class="action-label">Vault</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">Portfolio Performance</div>
+        <div class="chart-tabs">
+          <button class="ctab active">1W</button>
+          <button class="ctab">1M</button>
+          <button class="ctab">1Y</button>
+        </div>
+      </div>
+      <svg class="chart-svg" viewBox="0 0 420 110" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#6C5CE7"/>
+            <stop offset="100%" stop-color="#00D2D3"/>
+          </linearGradient>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6C5CE7" stop-opacity=".3"/>
+            <stop offset="100%" stop-color="#6C5CE7" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- grid lines -->
+        <line x1="0" y1="27" x2="420" y2="27" stroke="#ffffff06" stroke-width="1"/>
+        <line x1="0" y1="54" x2="420" y2="54" stroke="#ffffff06" stroke-width="1"/>
+        <line x1="0" y1="81" x2="420" y2="81" stroke="#ffffff06" stroke-width="1"/>
+        <!-- area -->
+        <path fill="url(#areaGrad)" d="
+          M0,90 C30,85 55,75 80,68
+          C105,60 125,72 150,58
+          C175,44 195,50 220,36
+          C245,22 265,30 290,20
+          C315,10 340,16 365,12
+          L390,8 L420,6 L420,110 L0,110 Z"/>
+        <!-- line -->
+        <path fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linecap="round" d="
+          M0,90 C30,85 55,75 80,68
+          C105,60 125,72 150,58
+          C175,44 195,50 220,36
+          C245,22 265,30 290,20
+          C315,10 340,16 365,12
+          L390,8 420,6"/>
+        <!-- tooltip dot -->
+        <circle cx="390" cy="8" r="5" fill="#A29BFE" opacity=".95"/>
+        <circle cx="390" cy="8" r="10" fill="#A29BFE" opacity=".2"/>
+        <!-- x-axis labels -->
+        <text x="0"   y="108" fill="#6B6A7A" font-size="9" font-family="Sora">Mon</text>
+        <text x="58"  y="108" fill="#6B6A7A" font-size="9" font-family="Sora">Tue</text>
+        <text x="116" y="108" fill="#6B6A7A" font-size="9" font-family="Sora">Wed</text>
+        <text x="178" y="108" fill="#6B6A7A" font-size="9" font-family="Sora">Thu</text>
+        <text x="238" y="108" fill="#6B6A7A" font-size="9" font-family="Sora">Fri</text>
+        <text x="298" y="108" fill="#6B6A7A" font-size="9" font-family="Sora">Sat</text>
+        <text x="370" y="108" fill="#A29BFE" font-size="9" font-family="Sora" font-weight="500">Today</text>
+      </svg>
+      <div class="chart-stats">
+        <div class="cstat">
+          <div class="cstat-label">7d High</div>
+          <div class="cstat-val" style="color:var(--green)">$13,201</div>
+        </div>
+        <div class="cstat">
+          <div class="cstat-label">7d Low</div>
+          <div class="cstat-val" style="color:var(--red)">$11,840</div>
+        </div>
+        <div class="cstat">
+          <div class="cstat-label">Avg Vol</div>
+          <div class="cstat-val" style="color:var(--subtle)">$12,044</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ASSETS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Your Assets</div>
+      <div class="section-link">See all →</div>
+    </div>
+    <div class="assets-grid">
+      <!-- BTC -->
+      <div class="asset-card">
+        <div class="asset-card-top">
+          <div class="asset-icon" style="background:#F7931A15">₿</div>
+          <div class="pct-up">▲ 5.1%</div>
+        </div>
+        <div class="asset-name">Bitcoin</div>
+        <div class="asset-sym">BTC</div>
+        <div style="margin-top:12px;">
+          <div class="asset-val">$9,841</div>
+          <div class="asset-qty">0.14823 BTC</div>
+        </div>
+        <div class="mini-bar">
+          <div class="mini-bar-fill" style="width:79%;background:var(--btc)"></div>
+        </div>
+      </div>
+      <!-- ETH -->
+      <div class="asset-card">
+        <div class="asset-card-top">
+          <div class="asset-icon" style="background:#627EEA15">Ξ</div>
+          <div class="pct-up">▲ 2.3%</div>
+        </div>
+        <div class="asset-name">Ethereum</div>
+        <div class="asset-sym">ETH</div>
+        <div style="margin-top:12px;">
+          <div class="asset-val">$2,108</div>
+          <div class="asset-qty">0.92 ETH</div>
+        </div>
+        <div class="mini-bar">
+          <div class="mini-bar-fill" style="width:17%;background:var(--eth)"></div>
+        </div>
+      </div>
+      <!-- USDT -->
+      <div class="asset-card">
+        <div class="asset-card-top">
+          <div class="asset-icon" style="background:#26A17B15">₮</div>
+          <div class="pct-dn">▼ 0.01%</div>
+        </div>
+        <div class="asset-name">Tether</div>
+        <div class="asset-sym">USDT</div>
+        <div style="margin-top:12px;">
+          <div class="asset-val">$500</div>
+          <div class="asset-qty">500.00 USDT</div>
+        </div>
+        <div class="mini-bar">
+          <div class="mini-bar-fill" style="width:4%;background:var(--usdt)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY + STATS -->
+  <div class="bottom-grid">
+
+    <!-- Activity -->
+    <div>
+      <div class="section-header" style="margin-bottom:14px;">
+        <div class="section-title">Recent Activity</div>
+        <div class="section-link">View all →</div>
+      </div>
+      <div class="activity-list">
+        <div class="activity-row">
+          <div class="activity-icon" style="background:#00B89420">📥</div>
+          <div class="activity-info">
+            <div class="activity-name">Received Bitcoin</div>
+            <div class="activity-sub">Today, 09:12 AM · from bc1q...4f2a</div>
+          </div>
+          <div class="activity-right">
+            <div class="activity-amt" style="color:var(--green)">+$420.00</div>
+            <div class="activity-status">Confirmed</div>
+          </div>
+        </div>
+        <div class="activity-row">
+          <div class="activity-icon" style="background:#FF6B6B20">📤</div>
+          <div class="activity-info">
+            <div class="activity-name">Sent USDT</div>
+            <div class="activity-sub">Yesterday, 3:44 PM · to 0x7f...3b9c</div>
+          </div>
+          <div class="activity-right">
+            <div class="activity-amt" style="color:var(--red)">-$200.00</div>
+            <div class="activity-status">Confirmed</div>
+          </div>
+        </div>
+        <div class="activity-row">
+          <div class="activity-icon" style="background:#FDCB6E20">🔄</div>
+          <div class="activity-info">
+            <div class="activity-name">Swapped ETH → BTC</div>
+            <div class="activity-sub">Apr 27, 11:00 AM · 0.12 ETH</div>
+          </div>
+          <div class="activity-right">
+            <div class="activity-amt" style="color:var(--amber)">0.12 ETH</div>
+            <div class="activity-status">Confirmed</div>
+          </div>
+        </div>
+        <div class="activity-row">
+          <div class="activity-icon" style="background:#A29BFE20">🔒</div>
+          <div class="activity-info">
+            <div class="activity-name">Vault Deposit</div>
+            <div class="activity-sub">Apr 25, 2:18 PM · BTC Vault</div>
+          </div>
+          <div class="activity-right">
+            <div class="activity-amt" style="color:var(--accent2)">0.05 BTC</div>
+            <div class="activity-status">Locked</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div>
+      <div class="section-header" style="margin-bottom:14px;">
+        <div class="section-title">Account Insights</div>
+      </div>
+      <div class="stats-col">
+        <div class="stat-card">
+          <div class="stat-label">Monthly Spend</div>
+          <div class="stat-val">$1,204</div>
+          <div class="stat-sub">of $2,000 limit</div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:60%"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Vault Savings</div>
+          <div class="stat-val" style="color:var(--accent2)">$3,120</div>
+          <div class="stat-sub">+12.4% this month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-val">48</div>
+          <div class="stat-sub">this month · Apr 2026</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /app -->
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="nav-item active">
+    <div class="nav-icon">🏠</div>
+    <div class="nav-label" style="color:var(--accent2)">Home</div>
+    <div class="nav-pip"></div>
+  </div>
+  <div class="nav-item">
+    <div class="nav-icon">📊</div>
+    <div class="nav-label">Markets</div>
+  </div>
+  <div class="nav-item">
+    <div class="nav-icon">💳</div>
+    <div class="nav-label">Pay</div>
+  </div>
+  <div class="nav-item">
+    <div class="nav-icon">🔒</div>
+    <div class="nav-label">Vaults</div>
+  </div>
+  <div class="nav-item">
+    <div class="nav-icon">⚙️</div>
+    <div class="nav-label">Settings</div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.ctab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
