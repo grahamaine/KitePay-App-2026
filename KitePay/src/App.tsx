@@ -2,7 +2,7 @@ import { createAppKit, useAppKitAccount, useAppKitProvider, useAppKitNetworkCore
 import React, { useState, useEffect, useRef } from 'react'
 import {
   LayoutDashboard, ArrowUpDown, ShieldCheck, Zap, Target,
-  Hexagon, Settings, Home, SendHorizonal,
+  Hexagon, Settings, Home,
 } from 'lucide-react'
 import { BrowserProvider, formatEther } from 'ethers'
 import { networks, projectId, metadata, ethersAdapter } from './config'
