@@ -1,5 +1,5 @@
 import { createAppKit, useAppKitAccount, useAppKitProvider, useAppKitNetworkCore, type Provider } from '@reown/appkit/react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BrowserProvider, formatEther } from 'ethers'
 import { networks, projectId, metadata, ethersAdapter } from './config'
 import { BalanceCard } from './components/BalanceCard'
@@ -214,5 +214,37 @@ function Dashboard() {
   )
 }
 
-export function App() { return <Dashboard /> }
+function SplashScreen({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<'enter' | 'pulse' | 'exit'>('enter');
+  const doneRef = useRef(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase('pulse'), 600);
+    const t2 = setTimeout(() => setPhase('exit'), 2400);
+    const t3 = setTimeout(() => { if (!doneRef.current) { doneRef.current = true; onDone(); } }, 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [onDone]);
+
+  return (
+    <div className={`splash splash--${phase}`}>
+      <div className="splash__ring splash__ring--1" />
+      <div className="splash__ring splash__ring--2" />
+      <div className="splash__ring splash__ring--3" />
+      <img src="/logo.png" className="splash__logo" alt="KitePay" />
+      <p className="splash__wordmark">KITEPAY</p>
+    </div>
+  );
+}
+
+export function App() {
+  const [ready, setReady] = useState(false);
+  return (
+    <>
+      {!ready && <SplashScreen onDone={() => setReady(true)} />}
+      <div className={`app-wrapper ${ready ? 'app-wrapper--visible' : ''}`}>
+        <Dashboard />
+      </div>
+    </>
+  );
+}
 export default App

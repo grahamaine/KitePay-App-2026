@@ -741,3 +741,59 @@ body {
   .bottom-nav__label { font-size: 10px; }
   .main-area { padding-bottom: 64px; }
 }
+
+/* ─── Splash Screen ──────────────────────────────────────────────────────────── */
+@keyframes splash-enter {
+  0%   { opacity: 0; transform: scale(0.4); }
+  70%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes splash-exit {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+@keyframes ring-pulse {
+  0%   { transform: translate(-50%,-50%) scale(0.6); opacity: 0.7; }
+  100% { transform: translate(-50%,-50%) scale(2.6); opacity: 0; }
+}
+@keyframes app-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--navy-950);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 20px;
+}
+.splash__logo {
+  width: 130px; height: 130px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 36px rgba(0,194,212,0.65));
+}
+.splash__wordmark {
+  font-size: 20px; font-weight: 700;
+  letter-spacing: 0.38em;
+  color: var(--cyan);
+  opacity: 0.9;
+}
+.splash__ring {
+  position: absolute; top: 50%; left: 50%;
+  width: 155px; height: 155px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,194,212,0.45);
+  pointer-events: none;
+}
+.splash--pulse .splash__ring--1 { animation: ring-pulse 1.4s ease-out 0s infinite; }
+.splash--pulse .splash__ring--2 { animation: ring-pulse 1.4s ease-out 0.46s infinite; }
+.splash--pulse .splash__ring--3 { animation: ring-pulse 1.4s ease-out 0.92s infinite; }
+
+.splash--enter .splash__logo,
+.splash--enter .splash__wordmark { animation: splash-enter 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+.splash--exit { animation: splash-exit 0.6s ease-in forwards; pointer-events: none; }
+
+.app-wrapper { opacity: 0; }
+.app-wrapper--visible { animation: app-fadein 0.5s ease forwards; }
