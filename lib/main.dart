@@ -18,6 +18,7 @@ import 'services/agent_service.dart';
 import 'services/identity_service.dart';
 import 'services/kite_chain_service.dart';
 import 'services/usdc_service.dart';
+import 'services/wallet_connect_service.dart';
 import 'services/x402_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -206,6 +207,7 @@ void main() async {
           update: (_, usdc, prev) => prev ?? X402Service(usdc),
         ),
         ChangeNotifierProvider(create: (_) => IdentityService()..initialize()),
+        ChangeNotifierProvider(create: (_) => WalletConnectService()),
       ],
       child: const KitePayApp(),
     ),

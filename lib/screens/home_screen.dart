@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../main.dart' show KiteColors;
+import '../screens/portfolio_screen.dart';
+import '../screens/swap_screen.dart';
 import '../screens/wallet_screen.dart';
 import '../services/agent_service.dart';
 import '../services/agent_screen.dart';
@@ -177,6 +179,33 @@ class _DashboardTabState extends State<_DashboardTab> {
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Quick actions
+            Row(children: [
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.auto_graph_rounded,
+                  label: 'Portfolio',
+                  color: KiteColors.cyan400,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PortfolioScreen()),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _QuickActionCard(
+                  icon: Icons.swap_horiz_rounded,
+                  label: 'Swap',
+                  color: KiteColors.gold400,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SwapScreen()),
+                  ),
+                ),
+              ),
+            ]),
+
             const SizedBox(height: 28),
 
             // Wallets header
@@ -212,6 +241,43 @@ class _DashboardTabState extends State<_DashboardTab> {
                 label: const Text('Add another wallet'),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 10),
+            Text(label,
+                style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                    fontSize: 14)),
+            const SizedBox(width: 4),
+            Icon(Icons.arrow_forward_ios_rounded, color: color, size: 13),
+          ]),
         ),
       ),
     );
