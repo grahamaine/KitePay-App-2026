@@ -229,35 +229,91 @@ function Dashboard() {
 }
 
 const HEX_CHARS = '0123456789ABCDEF'
+const RAIN_CHARS = '0123456789ABCDEF₿⟁∑Ξ⬡◈⬢'
 const BRAND = 'KITEPAY'
 
+const BOOT_LINES = [
+  'INITIALIZING KITE CHAIN NODE...',
+  'AUTHENTICATING KITE PASSPORT...',
+  'LOADING AGENT PROTOCOLS...',
+]
+
+function MatrixRain({ active }: { active: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')!
+
+    const resize = () => {
+      canvas.width  = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    const fontSize = 13
+    const cols = Math.floor(canvas.width / fontSize)
+    const drops = Array.from({ length: cols }, () => Math.random() * -50)
+
+    let raf: number
+    const draw = () => {
+      ctx.fillStyle = 'rgba(2,4,8,0.18)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      for (let i = 0; i < drops.length; i++) {
+        const ch = RAIN_CHARS[Math.floor(Math.random() * RAIN_CHARS.length)]
+        const y  = drops[i] * fontSize
+
+        // bright leading char
+        ctx.fillStyle = 'rgba(0,255,220,0.95)'
+        ctx.font = `bold ${fontSize}px monospace`
+        ctx.fillText(ch, i * fontSize, y)
+
+        // dimmer trail char one step behind
+        ctx.fillStyle = 'rgba(0,194,212,0.35)'
+        ctx.font = `${fontSize}px monospace`
+        ctx.fillText(
+          RAIN_CHARS[Math.floor(Math.random() * RAIN_CHARS.length)],
+          i * fontSize, y - fontSize
+        )
+
+        if (y > canvas.height && Math.random() > 0.975) drops[i] = 0
+        drops[i] += 0.45
+      }
+      raf = requestAnimationFrame(draw)
+    }
+
+    if (active) draw()
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
+  }, [active])
+
+  return <canvas ref={canvasRef} className="splash__rain" />
+}
+
 function SplashScreen({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<'boot' | 'reveal' | 'stable' | 'exit'>('boot')
+  const [phase, setPhase]       = useState<'boot' | 'ignite' | 'reveal' | 'stable' | 'exit'>('boot')
   const [scramble, setScramble] = useState('·······')
-  const [hexAddr, setHexAddr] = useState('0x????????????????')
+  const [lineIdx, setLineIdx]   = useState(-1)
+  const [progress, setProgress] = useState(0)
   const doneRef = useRef(false)
 
+  // Phase timeline
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('reveal'), 300)
-    const t2 = setTimeout(() => setPhase('stable'), 1500)
-    const t3 = setTimeout(() => setPhase('exit'), 2600)
-    const t4 = setTimeout(() => { if (!doneRef.current) { doneRef.current = true; onDone() } }, 3200)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4) }
+    const t1 = setTimeout(() => setPhase('ignite'),  350)
+    const t2 = setTimeout(() => setPhase('reveal'),  1100)
+    const t3 = setTimeout(() => setPhase('stable'),  2300)
+    const t4 = setTimeout(() => setPhase('exit'),    4000)
+    const t5 = setTimeout(() => { if (!doneRef.current) { doneRef.current = true; onDone() } }, 4600)
+    return () => { [t1,t2,t3,t4,t5].forEach(clearTimeout) }
   }, [onDone])
 
-  // Hex address ticker
-  useEffect(() => {
-    const id = setInterval(() => {
-      setHexAddr('0x' + Array.from({ length: 16 }, () => HEX_CHARS[Math.floor(Math.random() * 16)]).join(''))
-    }, 90)
-    return () => clearInterval(id)
-  }, [])
-
-  // Scramble wordmark during reveal
+  // Wordmark scramble during reveal
   useEffect(() => {
     if (phase !== 'reveal') return
     let frame = 0
-    const total = 22
+    const total = 24
     const id = setInterval(() => {
       frame++
       const resolved = Math.floor((frame / total) * BRAND.length)
@@ -265,7 +321,7 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
         i < resolved ? ch : HEX_CHARS[Math.floor(Math.random() * 16)]
       ).join(''))
       if (frame >= total) { setScramble(BRAND); clearInterval(id) }
-    }, 55)
+    }, 52)
     return () => clearInterval(id)
   }, [phase])
 
@@ -273,17 +329,72 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
     if (phase === 'stable' || phase === 'exit') setScramble(BRAND)
   }, [phase])
 
+  // Sequential boot lines during stable
+  useEffect(() => {
+    if (phase !== 'stable') return
+    const timers = BOOT_LINES.map((_, i) =>
+      setTimeout(() => setLineIdx(i), i * 380)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [phase])
+
+  // Progress bar during stable
+  useEffect(() => {
+    if (phase !== 'stable') return
+    const start = Date.now()
+    const duration = 1500
+    const id = setInterval(() => {
+      const p = Math.min(100, ((Date.now() - start) / duration) * 100)
+      setProgress(p)
+      if (p >= 100) clearInterval(id)
+    }, 16)
+    return () => clearInterval(id)
+  }, [phase])
+
   return (
     <div className={`splash splash--${phase}`}>
-      <div className="splash__grid" />
-      <div className="splash__scanline" />
-      <img src="/logo.png" className="splash__logo" alt="KitePay" />
-      <p className="splash__wordmark">{scramble}</p>
-      <p className="splash__hex">{hexAddr}</p>
-      <div className="splash__status">
-        <span className="splash__cursor" />
-        <span>INITIALIZING SECURE CHANNEL</span>
+      <MatrixRain active={phase !== 'exit'} />
+      <div className="splash__vignette" />
+
+      <div className="splash__center">
+        {/* Logo + ring */}
+        <div className="splash__logo-wrap">
+          <div className="splash__ring splash__ring--1" />
+          <div className="splash__ring splash__ring--2" />
+          <img src="/logo.png" className="splash__logo" alt="KitePay" />
+        </div>
+
+        {/* Wordmark */}
+        <p className="splash__wordmark">{scramble}</p>
+
+        {/* Boot lines */}
+        <div className="splash__lines">
+          {BOOT_LINES.map((line, i) => (
+            <div
+              key={i}
+              className={`splash__line ${i <= lineIdx ? 'splash__line--visible' : ''} ${i === BOOT_LINES.length - 1 && i <= lineIdx ? 'splash__line--ready' : ''}`}
+            >
+              <span className="splash__line-prefix">&gt;</span>
+              <span>{line}</span>
+              <span className="splash__line-status">
+                {i < lineIdx ? '✓' : i === lineIdx && i < BOOT_LINES.length - 1 ? '···' : i === lineIdx ? 'READY' : ''}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Progress bar */}
+        {phase === 'stable' || phase === 'exit' ? (
+          <div className="splash__progress-wrap">
+            <div className="splash__progress-bar">
+              <div className="splash__progress-fill" style={{ width: `${progress}%` }} />
+            </div>
+            <span className="splash__progress-pct">{Math.round(progress)}%</span>
+          </div>
+        ) : null}
       </div>
+
+      <div className="splash__flash" />
     </div>
   )
 }
