@@ -53,7 +53,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAUynEu2vNDAPLwlhKhpLs_4LaWmFvCF50',
+    apiKey: String.fromEnvironment('FIREBASE_WEB_API_KEY', defaultValue: ''),
     appId: '1:361297541776:web:72e5738f1ff41e4f27b615',
     messagingSenderId: '361297541776',
     projectId: 'kitepay-aine',

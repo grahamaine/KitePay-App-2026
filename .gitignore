@@ -53,3 +53,8 @@ node_modules
 .env*.local
 
 .env
+
+# Firebase — contains API keys, use --dart-define at build time
+lib/firebase_options.dart
+google-services.json
+GoogleService-Info.plist
