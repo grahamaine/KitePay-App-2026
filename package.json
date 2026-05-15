@@ -1,5 +1,14 @@
 {
+  "name": "kitepay-root",
+  "private": true,
   "dependencies": {
-    "@turnkey/react-wallet-kit": "^2.0.0"
+    "@anthropic-ai/sdk": "^0.40.0",
+    "@turnkey/react-wallet-kit": "^2.0.0",
+    "ethers": "^6.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vercel/node": "^4.0.0",
+    "typescript": "^5.5.0"
   }
 }

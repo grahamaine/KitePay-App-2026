@@ -2,7 +2,7 @@ import { createAppKit, useAppKitAccount, useAppKitProvider, useAppKitNetworkCore
 import React, { useState, useEffect, useRef } from 'react'
 import {
   LayoutDashboard, ArrowUpDown, ShieldCheck, Zap, Target,
-  Hexagon, Settings, Home,
+  Hexagon, Settings, Home, Bot,
 } from 'lucide-react'
 import { BrowserProvider, formatEther } from 'ethers'
 import { networks, projectId, metadata, ethersAdapter } from './config'
@@ -19,6 +19,7 @@ import { DegensPage } from './pages/DegensPage'
 import { MaturityPage } from './pages/MaturityPage'
 import { TriellaPage } from './pages/TriellaPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { AgentPage }   from './pages/AgentPage'
 import './App.css'
 
 createAppKit({
@@ -31,26 +32,28 @@ createAppKit({
   themeVariables: { '--w3m-accent': '#00C2D4', '--w3m-border-radius-master': '12px' },
 })
 
-type Page = 'home' | 'payments' | 'security' | 'degenerates' | 'maturity' | 'triella' | 'settings'
+type Page = 'home' | 'payments' | 'security' | 'degenerates' | 'maturity' | 'triella' | 'agent' | 'settings'
 type Modal = 'send' | 'receive' | 'vault' | null
 
 const PAGE_TITLES: Record<Page, string> = {
-  home: 'Dashboard',
-  payments: 'Payments',
-  security: 'Security',
+  home:        'Dashboard',
+  payments:    'Payments',
+  security:    'Security',
   degenerates: 'Degens',
-  maturity: 'Maturity',
-  triella: 'Triella',
-  settings: 'Settings',
+  maturity:    'Maturity',
+  triella:     'Triella',
+  agent:       'AI Agent',
+  settings:    'Settings',
 }
 
-const NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string }[] = [
+const NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string; highlight?: boolean }[] = [
   { id: 'home',        icon: <LayoutDashboard size={17} />, label: 'Home'     },
   { id: 'payments',    icon: <ArrowUpDown     size={17} />, label: 'Payments' },
   { id: 'security',    icon: <ShieldCheck     size={17} />, label: 'Security' },
   { id: 'degenerates', icon: <Zap             size={17} />, label: 'Degens'   },
   { id: 'maturity',    icon: <Target          size={17} />, label: 'Maturity' },
   { id: 'triella',     icon: <Hexagon         size={17} />, label: 'Triella'  },
+  { id: 'agent',       icon: <Bot             size={17} />, label: 'AI Agent', highlight: true },
 ]
 
 function HomeDashboard({
@@ -128,7 +131,8 @@ function Dashboard() {
       case 'security': return <SecurityPage />
       case 'degenerates': return <DegensPage />
       case 'maturity': return <MaturityPage />
-      case 'triella': return <TriellaPage />
+      case 'triella':  return <TriellaPage />
+      case 'agent':    return <AgentPage />
       case 'settings': return <SettingsPage />
       default: return (
         <HomeDashboard
@@ -160,11 +164,12 @@ function Dashboard() {
           {NAV_ITEMS.map(n => (
             <button
               key={n.id}
-              className={`nav-item ${page === n.id ? 'nav-item--active' : ''}`}
+              className={`nav-item ${page === n.id ? 'nav-item--active' : ''} ${n.highlight ? 'nav-item--highlight' : ''}`}
               onClick={() => setPage(n.id)}
             >
               <span className="nav-item__icon">{n.icon}</span>
               <span className="nav-item__label">{n.label}</span>
+              {n.highlight && <span className="nav-item__badge">AI</span>}
             </button>
           ))}
         </nav>

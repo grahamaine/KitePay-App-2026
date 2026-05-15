@@ -1,13 +1,17 @@
 {
-    "buildCommand": "cd KitePay && npm install && npm run build",
+    "installCommand": "npm install && cd KitePay && npm install",
+    "buildCommand": "cd KitePay && npm run build",
     "outputDirectory": "KitePay/dist",
-    "framework": "vite",
     "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
+        { "source": "/api/(.*)", "destination": "/api/$1" },
+        { "source": "/((?!api/).*)", "destination": "/index.html" }
     ],
+    "functions": {
+        "api/agent.ts":              { "maxDuration": 60 },
+        "api/services/price.ts":     { "maxDuration": 15 },
+        "api/services/defi.ts":      { "maxDuration": 15 },
+        "api/services/sentiment.ts": { "maxDuration": 15 }
+    },
     "headers": [
         {
             "source": "/assets/(.*)",
@@ -20,7 +24,9 @@
             "headers": [
                 { "key": "X-Content-Type-Options", "value": "nosniff" },
                 { "key": "X-Frame-Options", "value": "DENY" },
-                { "key": "X-XSS-Protection", "value": "1; mode=block" }
+                { "key": "X-XSS-Protection", "value": "1; mode=block" },
+                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                { "key": "Access-Control-Allow-Headers", "value": "x-payment-hash, content-type" }
             ]
         }
     ]
