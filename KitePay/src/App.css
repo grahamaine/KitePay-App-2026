@@ -133,6 +133,7 @@ body {
 .topbar__logo { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; display: none; }
 .topbar__title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
 .topbar__right { display: flex; align-items: center; gap: 12px; }
+.topbar__back { display: none; }
 
 /* ── Dashboard grid ─────────────────────────────────────────────────────── */
 .dashboard {
@@ -745,24 +746,39 @@ body {
   .balance-card__amount { font-size: 28px; }
   .bottom-nav {
     display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     position: fixed; bottom: 0; left: 0; right: 0;
     background: var(--navy-800);
     border-top: 1px solid var(--glass-border);
     z-index: 100;
     padding-bottom: env(safe-area-inset-bottom);
   }
+  .bottom-nav::-webkit-scrollbar { display: none; }
   .bottom-nav__item {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; gap: 3px; padding: 10px 4px;
+    flex: 0 0 auto; min-width: 60px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px; padding: 8px 6px;
     background: none; border: none; color: var(--grey-400);
     font-family: 'Oswald', sans-serif;
-    font-size: 10px; font-weight: 400;
-    letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 9px; font-weight: 400;
+    letter-spacing: 0.06em; text-transform: uppercase;
     cursor: pointer; transition: color 0.15s;
   }
   .bottom-nav__item--active { color: var(--cyan); }
   .bottom-nav__icon { display: flex; align-items: center; justify-content: center; }
-  .bottom-nav__label { font-size: 10px; }
+  .bottom-nav__label { font-size: 9px; white-space: nowrap; }
+  .topbar__back {
+    display: flex;
+    align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    color: var(--cyan); cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .topbar__back:hover { background: var(--navy-700); }
   .main-area { padding-bottom: 64px; }
 }
 
