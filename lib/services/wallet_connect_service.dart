@@ -18,17 +18,17 @@ class WalletConnectService extends ChangeNotifier {
       const ReownAppKitModalNetworkInfo(
         name: 'Kite Testnet',
         chainId: '2368',
-        currency: 'ETH',
+        currency: 'KITE',
         rpcUrl: 'https://rpc-testnet.gokite.ai/',
-        explorerUrl: 'https://testnet.kitescan.io',
+        explorerUrl: 'https://testnet.kitescan.ai',
         isTestNetwork: true,
       ),
       const ReownAppKitModalNetworkInfo(
         name: 'Kite',
         chainId: '2366',
-        currency: 'ETH',
+        currency: 'KITE',
         rpcUrl: 'https://rpc.gokite.ai/',
-        explorerUrl: 'https://kitescan.io',
+        explorerUrl: 'https://kitescan.ai',
       ),
     ]);
 
@@ -53,8 +53,15 @@ class WalletConnectService extends ChangeNotifier {
       },
     );
 
-    await _modal!.init();
-    _modal!.addListener(_onModalChanged);
+    try {
+      await _modal!.init();
+      _modal!.addListener(_onModalChanged);
+    } catch (_) {
+      _initialized = false;
+      _modal = null;
+      notifyListeners();
+      return;
+    }
     notifyListeners();
   }
 
@@ -63,7 +70,8 @@ class WalletConnectService extends ChangeNotifier {
   }
 
   void openModal([BuildContext? context]) {
-    _modal?.openModalView();
+    if (_modal == null || !_initialized) return;
+    _modal!.openModalView();
   }
 
   Future<void> disconnect() async {

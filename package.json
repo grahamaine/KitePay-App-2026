@@ -3,13 +3,22 @@
   "private": true,
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
-    "groq-sdk": "^0.9.0",
     "@turnkey/react-wallet-kit": "^2.0.0",
-    "ethers": "^6.13.0"
+    "ethers": "^6.13.0",
+    "groq-sdk": "^0.9.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@vercel/node": "^4.0.0",
+    "@vercel/node": "^5.8.2",
     "typescript": "^5.5.0"
+  },
+  "overrides": {
+    "tar": "^7.5.15",
+    "undici": "^7.16.0",
+    "esbuild": "^0.25.0",
+    "minimatch": "^10.2.5",
+    "path-to-regexp": "^8.0.0",
+    "smol-toml": "^1.6.1",
+    "ajv": "^8.20.0"
   }
 }

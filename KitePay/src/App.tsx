@@ -2,7 +2,7 @@ import { createAppKit, useAppKitAccount, useAppKitProvider, useAppKitNetworkCore
 import React, { useState, useEffect, useRef } from 'react'
 import {
   LayoutDashboard, ArrowUpDown, ShieldCheck, Zap, Target,
-  Hexagon, Settings, Home, Bot,
+  Hexagon, Settings, Home, Bot, ChevronLeft,
 } from 'lucide-react'
 import { BrowserProvider, formatEther } from 'ethers'
 import { networks, projectId, metadata, ethersAdapter } from './config'
@@ -119,11 +119,25 @@ function Dashboard() {
 
   const handleGetBalance = async () => {
     if (!walletProvider || !address) return
-    const provider = new BrowserProvider(walletProvider, chainId)
-    const bal = await provider.getBalance(address)
-    const sym = [2368, 2366].includes(Number(chainId)) ? 'KITE' : 'ETH'
-    setNativeBalance(`${parseFloat(formatEther(bal)).toFixed(4)} ${sym}`)
+    try {
+      const provider = new BrowserProvider(walletProvider, chainId)
+      const bal = await provider.getBalance(address)
+      const sym = [2368, 2366].includes(Number(chainId)) ? 'KITE' : 'ETH'
+      setNativeBalance(`${parseFloat(formatEther(bal)).toFixed(4)} ${sym}`)
+    } catch {
+      setNativeBalance('—')
+    }
   }
+
+  useEffect(() => {
+    if (address && walletProvider) {
+      handleGetBalance()
+    } else {
+      setNativeBalance('')
+      setKiteBalance('')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, chainId])
 
   const renderPage = () => {
     switch (page) {
@@ -188,6 +202,11 @@ function Dashboard() {
       <div className="main-area">
         <header className="topbar">
           <div className="topbar__left">
+            {page !== 'home' && (
+              <button className="topbar__back" onClick={() => setPage('home')}>
+                <ChevronLeft size={22} />
+              </button>
+            )}
             <img src="/logo.png" alt="KitePay" className="topbar__logo" />
             <h1 className="topbar__title">{PAGE_TITLES[page]}</h1>
           </div>
@@ -204,10 +223,14 @@ function Dashboard() {
       {/* Bottom nav (mobile) */}
       <nav className="bottom-nav">
         {[
-          { id: 'home' as Page,        icon: <Home         size={20} />, label: 'Home'     },
-          { id: 'payments' as Page,    icon: <ArrowUpDown  size={20} />, label: 'Payments' },
-          { id: 'degenerates' as Page, icon: <Zap          size={20} />, label: 'Degens'   },
-          { id: 'settings' as Page,    icon: <Settings     size={20} />, label: 'Settings' },
+          { id: 'home' as Page,        icon: <Home         size={18} />, label: 'Home'     },
+          { id: 'payments' as Page,    icon: <ArrowUpDown  size={18} />, label: 'Pay'      },
+          { id: 'security' as Page,    icon: <ShieldCheck  size={18} />, label: 'Security' },
+          { id: 'degenerates' as Page, icon: <Zap          size={18} />, label: 'Degens'   },
+          { id: 'maturity' as Page,    icon: <Target       size={18} />, label: 'Maturity' },
+          { id: 'triella' as Page,     icon: <Hexagon      size={18} />, label: 'Triella'  },
+          { id: 'agent' as Page,       icon: <Bot          size={18} />, label: 'Agent'    },
+          { id: 'settings' as Page,    icon: <Settings     size={18} />, label: 'Settings' },
         ].map(n => (
           <button
             key={n.id}

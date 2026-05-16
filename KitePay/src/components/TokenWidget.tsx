@@ -42,6 +42,9 @@ export const TokenWidget = ({ onKiteBalance }: TokenWidgetProps) => {
       setKiteBalance(fmt)
       setTotalSupply(supplyFmt)
       onKiteBalance?.(`${fmt} KITE`)
+    } catch {
+      setKiteBalance('—')
+      setTotalSupply('')
     } finally {
       setLoading(false)
     }

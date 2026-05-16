@@ -19,6 +19,8 @@ export const SendModal = ({ onClose }: SendModalProps) => {
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
   const [msg, setMsg] = useState('')
   const onKite = [2368, 2366].includes(Number(chainId))
+  const useKiteToken = onKite && !!KITE_TOKEN_ADDRESS
+  const sendLabel = useKiteToken ? 'KITE' : onKite ? 'KITE (native)' : 'ETH'
 
   const handleSend = async () => {
     if (!to || !amount || !walletProvider) return
@@ -26,7 +28,7 @@ export const SendModal = ({ onClose }: SendModalProps) => {
     try {
       const provider = new BrowserProvider(walletProvider)
       const signer = await provider.getSigner()
-      if (onKite && KITE_TOKEN_ADDRESS) {
+      if (useKiteToken) {
         const contract = new Contract(KITE_TOKEN_ADDRESS, TRANSFER_ABI, signer)
         const tx = await contract.transfer(to, parseUnits(amount, 18))
         await tx.wait()
@@ -34,7 +36,7 @@ export const SendModal = ({ onClose }: SendModalProps) => {
       } else {
         const tx = await signer.sendTransaction({ to, value: parseUnits(amount, 'ether') })
         await tx.wait()
-        setMsg(`✓ Sent ${amount} ETH`)
+        setMsg(`✓ Sent ${amount} ${onKite ? 'KITE' : 'ETH'}`)
       }
       setStatus('done')
     } catch (e: any) {
@@ -46,7 +48,7 @@ export const SendModal = ({ onClose }: SendModalProps) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal__header">
-          <h2 className="modal__title">Send {onKite ? 'KITE' : 'ETH'}</h2>
+          <h2 className="modal__title">Send {sendLabel}</h2>
           <button className="modal__close" onClick={onClose}>✕</button>
         </div>
         {!isConnected ? (
