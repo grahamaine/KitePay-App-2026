@@ -1,7 +1,6 @@
 import { StrictMode, Component } from 'react'
 import type { ReactNode, ErrorInfo } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './App'
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -17,20 +16,15 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           height: '100vh', background: '#0B0F1E', color: '#fff', fontFamily: 'monospace', padding: '2rem', gap: '1rem'
         }}>
-          <img src={`${import.meta.env.BASE_URL}logo.png`} style={{ width: 56, borderRadius: 12 }} alt="" />
-          <h2 style={{ color: '#00C2D4', margin: 0 }}>KitePay failed to load</h2>
+          <h2 style={{ color: '#EF4444', margin: 0 }}>KitePay failed to load</h2>
           <pre style={{
             background: '#111827', padding: '1rem', borderRadius: 8, maxWidth: '90vw',
-            overflowX: 'auto', fontSize: 12, color: '#EF4444', whiteSpace: 'pre-wrap', wordBreak: 'break-word'
+            overflow: 'auto', fontSize: 12, color: '#fca5a5', whiteSpace: 'pre-wrap', wordBreak: 'break-word'
           }}>
-            {(error as Error).message}
-            {'\n\n'}
-            {(error as Error).stack}
+            {(error as Error).message}{'\n\n'}{(error as Error).stack}
           </pre>
-          <button
-            onClick={() => window.location.reload()}
-            style={{ background: '#00C2D4', color: '#0B0F1E', border: 'none', padding: '0.6rem 1.4rem', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}
-          >
+          <button onClick={() => window.location.reload()}
+            style={{ background: '#00C2D4', color: '#0B0F1E', border: 'none', padding: '0.6rem 1.4rem', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
             Reload
           </button>
         </div>
@@ -40,10 +34,16 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </StrictMode>,
-)
+// Dynamic import catches module-level throws (e.g. createAppKit failing)
+import('./App').then(({ App }) => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </StrictMode>,
+  )
+}).catch((err: unknown) => {
+  const e = err instanceof Error ? err : new Error(String(err))
+  window.__kitepay_err?.(e.message, '', 0, 0, e)
+})
