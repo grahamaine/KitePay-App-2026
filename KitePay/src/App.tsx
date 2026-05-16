@@ -119,11 +119,25 @@ function Dashboard() {
 
   const handleGetBalance = async () => {
     if (!walletProvider || !address) return
-    const provider = new BrowserProvider(walletProvider, chainId)
-    const bal = await provider.getBalance(address)
-    const sym = [2368, 2366].includes(Number(chainId)) ? 'KITE' : 'ETH'
-    setNativeBalance(`${parseFloat(formatEther(bal)).toFixed(4)} ${sym}`)
+    try {
+      const provider = new BrowserProvider(walletProvider, chainId)
+      const bal = await provider.getBalance(address)
+      const sym = [2368, 2366].includes(Number(chainId)) ? 'KITE' : 'ETH'
+      setNativeBalance(`${parseFloat(formatEther(bal)).toFixed(4)} ${sym}`)
+    } catch {
+      setNativeBalance('—')
+    }
   }
+
+  useEffect(() => {
+    if (address && walletProvider) {
+      handleGetBalance()
+    } else {
+      setNativeBalance('')
+      setKiteBalance('')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, chainId])
 
   const renderPage = () => {
     switch (page) {
