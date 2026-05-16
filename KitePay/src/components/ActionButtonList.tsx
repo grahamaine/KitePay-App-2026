@@ -1,5 +1,5 @@
-import { useDisconnect, useAppKit, useAppKitNetwork, useAppKitAccount, useAppKitProvider, useAppKitNetworkCore, type Provider } from '@reown/appkit/react'
-import { BrowserProvider, JsonRpcSigner, formatEther } from 'ethers'
+import { useDisconnect, useAppKit, useAppKitNetwork, useAppKitAccount, useAppKitProvider, type Provider } from '@reown/appkit/react'
+import { BrowserProvider, formatEther } from 'ethers'
 import { kiteTestnet } from '../config'
 
 interface ActionButtonListProps {
@@ -10,8 +10,7 @@ interface ActionButtonListProps {
 export const ActionButtonList = ({ sendSignMsg, sendBalance }: ActionButtonListProps) => {
   const { disconnect } = useDisconnect()
   const { open } = useAppKit()
-  const { chainId } = useAppKitNetworkCore()
-  const { switchNetwork } = useAppKitNetwork()
+  const { chainId, switchNetwork } = useAppKitNetwork()
   const { isConnected, address } = useAppKitAccount()
   const { walletProvider } = useAppKitProvider<Provider>('eip155')
 
@@ -25,15 +24,15 @@ export const ActionButtonList = ({ sendSignMsg, sendBalance }: ActionButtonListP
 
   const handleSignMsg = async () => {
     if (!walletProvider || !address) throw Error('Not connected')
-    const provider = new BrowserProvider(walletProvider, chainId)
-    const signer = new JsonRpcSigner(provider, address)
+    const provider = new BrowserProvider(walletProvider)
+    const signer = await provider.getSigner()
     const sig = await signer.signMessage('KitePay — Fly further with every payment')
     sendSignMsg(sig)
   }
 
   const handleGetBalance = async () => {
     if (!walletProvider || !address) throw Error('Not connected')
-    const provider = new BrowserProvider(walletProvider, chainId)
+    const provider = new BrowserProvider(walletProvider)
     const balance = await provider.getBalance(address)
     const symbol = [2368, 2366].includes(Number(chainId)) ? 'KITE' : 'ETH'
     sendBalance(`${parseFloat(formatEther(balance)).toFixed(6)} ${symbol}`)

@@ -1,5 +1,5 @@
-import { createAppKit, useAppKitAccount, useAppKitProvider, useAppKitNetworkCore, type Provider } from '@reown/appkit/react'
-import React, { useState, useEffect, useRef } from 'react'
+import { createAppKit, useAppKitAccount, useAppKitProvider, useAppKitNetwork, type Provider } from '@reown/appkit/react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   LayoutDashboard, ArrowUpDown, ShieldCheck, Zap, Target,
   Hexagon, Settings, Home, Bot, ChevronLeft,
@@ -114,20 +114,20 @@ function Dashboard() {
   const [kiteBalance, setKiteBalance] = useState('')
 
   const { address } = useAppKitAccount()
-  const { chainId } = useAppKitNetworkCore()
+  const { chainId } = useAppKitNetwork()
   const { walletProvider } = useAppKitProvider<Provider>('eip155')
 
-  const handleGetBalance = async () => {
+  const handleGetBalance = useCallback(async () => {
     if (!walletProvider || !address) return
     try {
-      const provider = new BrowserProvider(walletProvider, chainId)
+      const provider = new BrowserProvider(walletProvider)
       const bal = await provider.getBalance(address)
       const sym = [2368, 2366].includes(Number(chainId)) ? 'KITE' : 'ETH'
       setNativeBalance(`${parseFloat(formatEther(bal)).toFixed(4)} ${sym}`)
     } catch {
       setNativeBalance('—')
     }
-  }
+  }, [walletProvider, address, chainId])
 
   useEffect(() => {
     if (address && walletProvider) {
@@ -136,8 +136,7 @@ function Dashboard() {
       setNativeBalance('')
       setKiteBalance('')
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address, chainId])
+  }, [address, chainId, walletProvider, handleGetBalance])
 
   const renderPage = () => {
     switch (page) {
