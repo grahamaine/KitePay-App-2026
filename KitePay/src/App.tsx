@@ -28,7 +28,7 @@ createAppKit({
   metadata,
   projectId,
   themeMode: 'dark',
-  features: { analytics: true },
+  features: { analytics: true, swaps: true, onramp: true, send: true },
   themeVariables: { '--w3m-accent': '#00C2D4', '--w3m-border-radius-master': '12px' },
 })
 
