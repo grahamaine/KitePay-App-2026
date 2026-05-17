@@ -733,8 +733,12 @@ body {
   line-height: 1.5;
 }
 
-/* ── Bottom nav (mobile only) ───────────────────────────────────────────── */
-.bottom-nav { display: none; }
+/* ── Hamburger button (mobile only) ─────────────────────────────────────── */
+.topbar__hamburger { display: none; }
+
+/* ── Mobile nav dropdown ─────────────────────────────────────────────────── */
+.nav-backdrop { display: none; }
+.nav-dropdown { display: none; }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -751,9 +755,10 @@ body {
     overflow: visible;
   }
   .sidebar { display: none; }
-  .main-area { overflow: visible; }
+  .main-area { overflow: visible; position: relative; }
   .topbar { padding: 14px 16px; }
   .topbar__logo { display: block; }
+  .topbar__logo--hidden-mobile { display: none; }
   .dashboard {
     grid-template-columns: 1fr;
     padding: 16px; gap: 16px;
@@ -762,31 +767,8 @@ body {
   .dashboard__right { flex-direction: column; }
   .quick-actions { grid-template-columns: repeat(2, 1fr); }
   .balance-card__amount { font-size: 28px; }
-  .bottom-nav {
-    display: flex;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--navy-800);
-    border-top: 1px solid var(--glass-border);
-    z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .bottom-nav::-webkit-scrollbar { display: none; }
-  .bottom-nav__item {
-    flex: 0 0 auto; min-width: 60px;
-    display: flex; flex-direction: column;
-    align-items: center; gap: 2px; padding: 8px 6px;
-    background: none; border: none; color: var(--grey-400);
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px; font-weight: 400;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    cursor: pointer; transition: color 0.15s;
-  }
-  .bottom-nav__item--active { color: var(--cyan); }
-  .bottom-nav__icon { display: flex; align-items: center; justify-content: center; }
-  .bottom-nav__label { font-size: 9px; white-space: nowrap; }
+
+  /* Back button */
   .topbar__back {
     display: flex;
     align-items: center; justify-content: center;
@@ -797,15 +779,75 @@ body {
     flex-shrink: 0;
   }
   .topbar__back:hover { background: var(--navy-700); }
-  .main-area { padding-bottom: 64px; }
 
-  /* Hide the topbar logo when the back button is also visible — saves horizontal space */
-  .topbar__logo--hidden-mobile { display: none; }
+  /* Hamburger button */
+  .topbar__hamburger {
+    display: flex;
+    align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    color: var(--white); cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  .topbar__hamburger:hover { background: var(--navy-700); color: var(--cyan); }
 
-  /* Show the connect banner instead of disabling actions on mobile */
+  /* Backdrop */
+  .nav-backdrop {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(3px);
+    z-index: 150;
+  }
+
+  /* Dropdown panel */
+  .nav-dropdown {
+    display: flex;
+    flex-direction: column;
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--navy-800);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    z-index: 200;
+    animation: dropdown-in 0.18s ease;
+    overflow: hidden;
+  }
+  @keyframes dropdown-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .nav-dropdown__item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px;
+    background: none; border: none;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--grey-400);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px; font-weight: 400;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.12s, color 0.12s;
+    text-align: left; width: 100%;
+  }
+  .nav-dropdown__item:last-child { border-bottom: none; }
+  .nav-dropdown__item:hover { background: rgba(255,255,255,0.04); color: var(--white); }
+  .nav-dropdown__item--active { color: var(--cyan); background: var(--cyan-dim); }
+  .nav-dropdown__item--highlight { color: var(--purple); }
+  .nav-dropdown__item--highlight.nav-dropdown__item--active { color: var(--purple); background: rgba(139,92,246,0.12); }
+  .nav-dropdown__icon { display: flex; align-items: center; width: 22px; flex-shrink: 0; }
+  .nav-dropdown__label { flex: 1; }
+  .nav-dropdown__active-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cyan); box-shadow: 0 0 6px var(--cyan);
+    flex-shrink: 0;
+  }
+  .nav-dropdown__item--highlight .nav-dropdown__active-dot { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
+
+  /* Show the connect banner on mobile */
   .connect-banner { display: flex; }
 
-  /* Ensure the Reown AppKit modal sits above our bottom-nav */
+  /* Reown modal above everything */
   w3m-modal, wcm-modal { z-index: 9000 !important; }
 }
 

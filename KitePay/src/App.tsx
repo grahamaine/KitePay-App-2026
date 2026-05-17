@@ -2,7 +2,7 @@ import { createAppKit, useAppKitAccount, useAppKitProvider, useAppKitNetwork, ty
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   LayoutDashboard, ArrowUpDown, ShieldCheck, Zap, Target,
-  Hexagon, Settings, Home, Bot, ChevronLeft,
+  Hexagon, Settings, Home, Bot, ChevronLeft, Menu, X,
 } from 'lucide-react'
 import { BrowserProvider, formatEther } from 'ethers'
 import { networks, projectId, metadata, ethersAdapter } from './config'
@@ -114,9 +114,21 @@ function HomeDashboard({
   )
 }
 
+const MOBILE_NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string; highlight?: boolean }[] = [
+  { id: 'home',        icon: <Home         size={18} />, label: 'Home'     },
+  { id: 'payments',    icon: <ArrowUpDown  size={18} />, label: 'Payments' },
+  { id: 'security',    icon: <ShieldCheck  size={18} />, label: 'Security' },
+  { id: 'degenerates', icon: <Zap          size={18} />, label: 'Degens'   },
+  { id: 'maturity',    icon: <Target       size={18} />, label: 'Maturity' },
+  { id: 'triella',     icon: <Hexagon      size={18} />, label: 'Triella'  },
+  { id: 'agent',       icon: <Bot          size={18} />, label: 'AI Agent', highlight: true },
+  { id: 'settings',    icon: <Settings     size={18} />, label: 'Settings' },
+]
+
 function Dashboard() {
   const [page, setPage] = useState<Page>('home')
   const [modal, setModal] = useState<Modal>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [nativeBalance, setNativeBalance] = useState('')
   const [kiteBalance, setKiteBalance] = useState('')
 
@@ -209,7 +221,7 @@ function Dashboard() {
         <header className="topbar">
           <div className="topbar__left">
             {page !== 'home' && (
-              <button className="topbar__back" onClick={() => setPage('home')}>
+              <button className="topbar__back" onClick={() => { setPage('home'); setMenuOpen(false) }}>
                 <ChevronLeft size={22} />
               </button>
             )}
@@ -222,36 +234,41 @@ function Dashboard() {
           </div>
           <div className="topbar__right">
             <appkit-button balance="hide" />
+            <button
+              className="topbar__hamburger"
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label="Navigation menu"
+            >
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
         </header>
+
+        {/* Mobile dropdown nav */}
+        {menuOpen && (
+          <>
+            <div className="nav-backdrop" onClick={() => setMenuOpen(false)} />
+            <nav className="nav-dropdown">
+              {MOBILE_NAV_ITEMS.map(n => (
+                <button
+                  key={n.id}
+                  className={`nav-dropdown__item ${page === n.id ? 'nav-dropdown__item--active' : ''} ${n.highlight ? 'nav-dropdown__item--highlight' : ''}`}
+                  onClick={() => { setPage(n.id); setMenuOpen(false) }}
+                >
+                  <span className="nav-dropdown__icon">{n.icon}</span>
+                  <span className="nav-dropdown__label">{n.label}</span>
+                  {n.highlight && <span className="nav-item__badge">AI</span>}
+                  {page === n.id && <span className="nav-dropdown__active-dot" />}
+                </button>
+              ))}
+            </nav>
+          </>
+        )}
 
         <div className="page-content">
           {renderPage()}
         </div>
       </div>
-
-      {/* Bottom nav (mobile) */}
-      <nav className="bottom-nav">
-        {[
-          { id: 'home' as Page,        icon: <Home         size={18} />, label: 'Home'     },
-          { id: 'payments' as Page,    icon: <ArrowUpDown  size={18} />, label: 'Pay'      },
-          { id: 'security' as Page,    icon: <ShieldCheck  size={18} />, label: 'Security' },
-          { id: 'degenerates' as Page, icon: <Zap          size={18} />, label: 'Degens'   },
-          { id: 'maturity' as Page,    icon: <Target       size={18} />, label: 'Maturity' },
-          { id: 'triella' as Page,     icon: <Hexagon      size={18} />, label: 'Triella'  },
-          { id: 'agent' as Page,       icon: <Bot          size={18} />, label: 'Agent'    },
-          { id: 'settings' as Page,    icon: <Settings     size={18} />, label: 'Settings' },
-        ].map(n => (
-          <button
-            key={n.id}
-            className={`bottom-nav__item ${page === n.id ? 'bottom-nav__item--active' : ''}`}
-            onClick={() => setPage(n.id)}
-          >
-            <span className="bottom-nav__icon">{n.icon}</span>
-            <span className="bottom-nav__label">{n.label}</span>
-          </button>
-        ))}
-      </nav>
 
       {/* Modals */}
       {modal === 'send' && <SendModal onClose={() => setModal(null)} />}
