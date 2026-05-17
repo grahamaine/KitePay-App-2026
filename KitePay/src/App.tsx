@@ -76,11 +76,18 @@ function HomeDashboard({
     <main className="dashboard">
       <div className="dashboard__left">
         <BalanceCard nativeBalance={nativeBalance} kiteBalance={kiteBalance} onGetBalance={onGetBalance} />
+        {!connected && (
+          <div className="connect-banner">
+            <p className="connect-banner__text">Connect your wallet to access all features</p>
+            <appkit-button balance="hide" />
+          </div>
+        )}
         <QuickActions
           onSend={() => onModal('send')}
           onReceive={() => onModal('receive')}
           onVault={() => onModal('vault')}
           onPayments={() => onModal(null)}
+          disabled={!connected}
         />
         <PaymentsWidget />
       </div>
@@ -206,11 +213,15 @@ function Dashboard() {
                 <ChevronLeft size={22} />
               </button>
             )}
-            <img src="/logo.png" alt="KitePay" className="topbar__logo" />
+            <img
+              src="/logo.png"
+              alt="KitePay"
+              className={`topbar__logo ${page !== 'home' ? 'topbar__logo--hidden-mobile' : ''}`}
+            />
             <h1 className="topbar__title">{PAGE_TITLES[page]}</h1>
           </div>
           <div className="topbar__right">
-            <appkit-button />
+            <appkit-button balance="hide" />
           </div>
         </header>
 
