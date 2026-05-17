@@ -2,7 +2,7 @@ import { sepolia } from '@reown/appkit/networks'
 import type { AppKitNetwork } from '@reown/appkit/networks'
 import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 
-export const projectId = import.meta.env.VITE_PROJECT_ID || "330707bcc383f56d2f8710e23161f96b"
+export const projectId = import.meta.env.VITE_PROJECT_ID || "7b1e50998db0cb3bfff97d58635c4b56"
 
 if (!projectId) {
   throw new Error('Project ID is not defined')
