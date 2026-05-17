@@ -11,8 +11,8 @@ if (!projectId) {
 export const metadata = {
   name: 'KitePay',
   description: 'KitePay — Fly further with every payment',
-  url: 'https://grahamaine.github.io/KitePay_',
-  icons: ['https://grahamaine.github.io/KitePay_/icon-192.png'],
+  url: 'https://kitepay.vercel.app',
+  icons: ['https://kitepay.vercel.app/icon-192.png'],
 }
 
 export const kiteTestnet: AppKitNetwork = {
