@@ -34,6 +34,22 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   }
 }
 
+// Purge stale WalletConnect sessions when the project ID changes.
+// Stale sessions cause isValidSessionTopic errors on the relay websocket.
+function clearStaleWcSessions() {
+  try {
+    const PROJECT_ID = import.meta.env.VITE_PROJECT_ID || '330707bcc383f56d2f8710e23161f96b'
+    const CACHE_KEY  = '__kp_wc_pid'
+    if (localStorage.getItem(CACHE_KEY) !== PROJECT_ID) {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith('wc@2') || k.startsWith('W3M') || k.startsWith('wagmi'))
+        .forEach(k => localStorage.removeItem(k))
+      localStorage.setItem(CACHE_KEY, PROJECT_ID)
+    }
+  } catch { /* localStorage may be blocked in some browsers */ }
+}
+clearStaleWcSessions()
+
 // Dynamic import catches module-level throws (e.g. createAppKit failing)
 import('./App').then(({ App }) => {
   createRoot(document.getElementById('root')!).render(
