@@ -12,6 +12,7 @@
   "dependencies": {
     "@reown/appkit": "1.8.19",
     "@reown/appkit-adapter-ethers": "1.8.19",
+    "@turnkey/react-wallet-kit": "^2.0.0",
     "ethers": "^6.13.2",
     "kite-api": "^3.21.0",
     "lucide-react": "^1.16.0",
