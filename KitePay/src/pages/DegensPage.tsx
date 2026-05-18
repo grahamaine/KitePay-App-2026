@@ -3,7 +3,7 @@ import { useAppKitAccount, useAppKitProvider, useAppKitNetwork, useAppKit } from
 import { BrowserProvider, Contract, parseUnits, formatUnits } from 'ethers'
 import type { Provider } from '@reown/appkit/react'
 import { LP_ADDRESS, LP_ABI } from '../abi/KiteLiquidityPool'
-import { KITE_TOKEN_ADDRESS, USDC_TOKEN_ADDRESS, KITE_TOKEN_ABI } from '../abi/KitePayToken'
+import { KITE_TOKEN_ADDRESS, USDC_TOKEN_ADDRESS } from '../abi/KitePayToken'
 
 const APPROVE_ABI = [
   { inputs: [{ internalType: 'address', name: 'spender', type: 'address' }, { internalType: 'uint256', name: 'value', type: 'uint256' }], name: 'approve', outputs: [{ internalType: 'bool', name: '', type: 'bool' }], stateMutability: 'nonpayable', type: 'function' },
