@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { useAppKitAccount } from '@reown/appkit/react'
 
+const useNotice = () => {
+  const [notice, setNotice] = useState('')
+  const show = (msg: string) => { setNotice(msg); setTimeout(() => setNotice(''), 3000) }
+  return { notice, show }
+}
+
 const VAULT_ITEMS = [
   { label: 'KITE Staked', value: '50,000 KITE', icon: '🔒', color: '#8B5CF6' },
   { label: 'Rewards Earned', value: '1,250 KITE', icon: '✨', color: '#F0B429' },
@@ -12,6 +18,7 @@ interface VaultWidgetProps { onClose: () => void }
 export const VaultWidget = ({ onClose }: VaultWidgetProps) => {
   const { isConnected } = useAppKitAccount()
   const [stakeAmt, setStakeAmt] = useState('')
+  const { notice, show } = useNotice()
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -37,9 +44,10 @@ export const VaultWidget = ({ onClose }: VaultWidgetProps) => {
               <label>Stake Amount (KITE)</label>
               <input className="input" type="number" placeholder="0.00" value={stakeAmt} onChange={e => setStakeAmt(e.target.value)} />
             </div>
+            {notice && <p className="status-msg status-msg--loading">{notice}</p>}
             <div className="btn-row">
-              <button className="btn btn--primary" disabled={!stakeAmt}>Stake KITE</button>
-              <button className="btn btn--secondary">Unstake</button>
+              <button className="btn btn--primary" disabled={!stakeAmt} onClick={() => show('Staking contract coming soon')}>Stake KITE</button>
+              <button className="btn btn--secondary" onClick={() => show('Unstaking coming soon')}>Unstake</button>
             </div>
             <p className="modal__hint">Staking locks KITE for 30 days. Early withdrawal incurs a 2% fee.</p>
           </>

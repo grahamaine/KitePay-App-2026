@@ -84,6 +84,7 @@ export const SmartContractActionButtonList = ({ sendKiteBalance }: KiteTokenPane
   const onKiteChain = chainId !== undefined && KITE_CHAIN_IDS.includes(Number(chainId))
 
   const getContract = async (withSigner = false) => {
+    if (!walletProvider) throw new Error('Wallet provider not ready')
     const provider = new BrowserProvider(walletProvider)
     if (withSigner) {
       const signer = await provider.getSigner()
@@ -93,7 +94,7 @@ export const SmartContractActionButtonList = ({ sendKiteBalance }: KiteTokenPane
   }
 
   const handleGetBalance = async () => {
-    if (!address || !KITE_TOKEN_ADDRESS) return
+    if (!address || !KITE_TOKEN_ADDRESS || !walletProvider) return
     setStatus('loading')
     setStatusMsg('Fetching KITE balance...')
     try {
@@ -111,7 +112,7 @@ export const SmartContractActionButtonList = ({ sendKiteBalance }: KiteTokenPane
   }
 
   const handleGetTotalSupply = async () => {
-    if (!KITE_TOKEN_ADDRESS) return
+    if (!KITE_TOKEN_ADDRESS || !walletProvider) return
     setStatus('loading')
     setStatusMsg('Fetching total supply...')
     try {
