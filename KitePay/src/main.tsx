@@ -1,6 +1,13 @@
 import { StrictMode, Component } from 'react'
 import type { ReactNode, ErrorInfo } from 'react'
 import { createRoot } from 'react-dom/client'
+import { TurnkeyProvider } from '@turnkey/react-wallet-kit'
+import '@turnkey/react-wallet-kit/styles.css'
+
+const turnkeyConfig = {
+  organizationId: import.meta.env.VITE_TURNKEY_ORG_ID as string,
+  authProxyConfigId: import.meta.env.VITE_TURNKEY_CONFIG_ID as string,
+}
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -55,7 +62,9 @@ import('./App').then(({ App }) => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <ErrorBoundary>
-        <App />
+        <TurnkeyProvider config={turnkeyConfig}>
+          <App />
+        </TurnkeyProvider>
       </ErrorBoundary>
     </StrictMode>,
   )
