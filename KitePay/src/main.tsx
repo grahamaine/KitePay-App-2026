@@ -7,6 +7,16 @@ import '@turnkey/react-wallet-kit/styles.css'
 const turnkeyConfig = {
   organizationId: import.meta.env.VITE_TURNKEY_ORG_ID as string,
   authProxyConfigId: import.meta.env.VITE_TURNKEY_CONFIG_ID as string,
+  auth: {
+    emailEnabled: true,
+    passkeyEnabled: false,
+    phoneEnabled: false,
+    walletEnabled: false,
+    appleEnabled: false,
+    facebookEnabled: false,
+    discordEnabled: false,
+    googleEnabled: false,
+  },
 }
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {

@@ -20,6 +20,7 @@ import { MaturityPage } from './pages/MaturityPage'
 import { TriellaPage } from './pages/TriellaPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { AgentPage }   from './pages/AgentPage'
+import { TurnkeyAuthButton } from './components/TurnkeyAuthButton'
 import './App.css'
 
 createAppKit({
@@ -232,6 +233,7 @@ function Dashboard() {
             <h1 className="topbar__title">{PAGE_TITLES[page]}</h1>
           </div>
           <div className="topbar__right">
+            <TurnkeyAuthButton />
             <appkit-button />
           </div>
         </header>
