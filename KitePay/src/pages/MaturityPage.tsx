@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { useAppKitAccount } from '@reown/appkit/react'
 
+const useNotice = () => {
+  const [notice, setNotice] = useState('')
+  const show = (msg: string) => { setNotice(msg); setTimeout(() => setNotice(''), 3000) }
+  return { notice, show }
+}
+
 const PLANS = [
   { id: 'flex', name: 'Flexible', apy: '8%', lock: 'No lock', min: '100 KITE', color: '#00C2D4' },
   { id: '30d', name: '30 Days', apy: '12.5%', lock: '30 days', min: '500 KITE', color: '#F0B429' },
@@ -12,6 +18,7 @@ export const MaturityPage = () => {
   const { isConnected } = useAppKitAccount()
   const [selectedPlan, setSelectedPlan] = useState('30d')
   const [stakeAmt, setStakeAmt] = useState('')
+  const { notice, show } = useNotice()
 
   const plan = PLANS.find(p => p.id === selectedPlan)!
   const estReward = stakeAmt && plan
@@ -79,12 +86,13 @@ export const MaturityPage = () => {
             <span style={{ color: '#22C55E' }}>+{estReward} KITE</span>
           </div>
         )}
+        {notice && <p className="status-msg status-msg--loading" style={{ marginTop: 12 }}>{notice}</p>}
         <div className="btn-row" style={{ marginTop: 16 }}>
-          <button className="btn btn--primary" disabled={!isConnected || !stakeAmt}>
+          <button className="btn btn--primary" disabled={!isConnected || !stakeAmt} onClick={() => show('Staking contract coming soon')}>
             {isConnected ? 'Stake Now' : 'Connect Wallet'}
           </button>
-          <button className="btn btn--secondary" disabled={!isConnected}>Unstake</button>
-          <button className="btn btn--secondary" disabled={!isConnected}>Claim Rewards</button>
+          <button className="btn btn--secondary" disabled={!isConnected} onClick={() => show('Unstaking coming soon')}>Unstake</button>
+          <button className="btn btn--secondary" disabled={!isConnected} onClick={() => show('Claim rewards coming soon')}>Claim Rewards</button>
         </div>
       </div>
     </div>

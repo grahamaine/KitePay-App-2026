@@ -1,12 +1,19 @@
 import { useState } from 'react'
 import { useAppKitAccount } from '@reown/appkit/react'
 
+const useNotice = () => {
+  const [notice, setNotice] = useState('')
+  const show = (msg: string) => { setNotice(msg); setTimeout(() => setNotice(''), 3000) }
+  return { notice, show }
+}
+
 export const SecurityPage = () => {
   const { isConnected, address } = useAppKitAccount()
   const [twoFA, setTwoFA] = useState(true)
   const [autoLock, setAutoLock] = useState(true)
   const [biometrics, setBiometrics] = useState(false)
   const [txConfirm, setTxConfirm] = useState(true)
+  const { notice, show } = useNotice()
 
   const short = address ? `${address.slice(0, 10)}...${address.slice(-6)}` : '—'
 
@@ -64,10 +71,11 @@ export const SecurityPage = () => {
       <div className="widget">
         <div className="widget__header">
           <h3 className="widget__title">📋 Active Sessions</h3>
-          <button className="btn btn--secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>
+          <button className="btn btn--secondary" style={{ fontSize: '12px', padding: '6px 12px' }} onClick={() => show('All sessions revoked')}>
             Revoke All
           </button>
         </div>
+        {notice && <p className="status-msg status-msg--loading" style={{ marginBottom: 8 }}>{notice}</p>}
         {[
           { device: 'Chrome on Windows', location: 'Kampala, UG', time: 'Now', current: true },
           { device: 'KitePay Mobile App', location: 'Kampala, UG', time: '2h ago', current: false },
@@ -78,7 +86,7 @@ export const SecurityPage = () => {
               <p className="session-item__device">{s.device} {s.current && <span className="badge-current">Current</span>}</p>
               <p className="session-item__meta">{s.location} · {s.time}</p>
             </div>
-            {!s.current && <button className="btn-ghost" style={{ color: '#EF4444' }}>Revoke</button>}
+            {!s.current && <button className="btn-ghost" style={{ color: '#EF4444' }} onClick={() => show(`Session "${s.device}" revoked`)}>Revoke</button>}
           </div>
         ))}
       </div>

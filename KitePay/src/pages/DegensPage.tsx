@@ -1,26 +1,37 @@
 import { useState } from 'react'
-import { useAppKitAccount } from '@reown/appkit/react'
+import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 
 const TOKENS = ['KITE', 'ETH', 'USDC', 'WBTC']
 
+const POOLS = [
+  { pair: 'KITE / ETH', tvl: '$2.4M', apr: '24.5%', vol: '$180K' },
+  { pair: 'KITE / USDC', tvl: '$1.8M', apr: '18.2%', vol: '$240K' },
+  { pair: 'ETH / USDC', tvl: '$5.2M', apr: '12.1%', vol: '$620K' },
+]
+
 export const DegensPage = () => {
   const { isConnected } = useAppKitAccount()
+  const { open } = useAppKit()
   const [fromToken, setFromToken] = useState('ETH')
   const [toToken, setToToken] = useState('KITE')
   const [amount, setAmount] = useState('')
+  const [poolNotice, setPoolNotice] = useState('')
 
   const estimated = amount ? (parseFloat(amount) * 1840.5).toFixed(2) : ''
 
-  const swap = () => {
+  const flipTokens = () => {
     setFromToken(toToken)
     setToToken(fromToken)
   }
 
-  const POOLS = [
-    { pair: 'KITE / ETH', tvl: '$2.4M', apr: '24.5%', vol: '$180K' },
-    { pair: 'KITE / USDC', tvl: '$1.8M', apr: '18.2%', vol: '$240K' },
-    { pair: 'ETH / USDC', tvl: '$5.2M', apr: '12.1%', vol: '$620K' },
-  ]
+  const handleSwap = () => {
+    open({ view: 'Swap' })
+  }
+
+  const showPoolNotice = (msg: string) => {
+    setPoolNotice(msg)
+    setTimeout(() => setPoolNotice(''), 3000)
+  }
 
   return (
     <div className="page">
@@ -47,7 +58,7 @@ export const DegensPage = () => {
             </div>
           </div>
 
-          <button className="swap-flip-btn" onClick={swap} title="Flip tokens">⇅</button>
+          <button className="swap-flip-btn" onClick={flipTokens} title="Flip tokens">⇅</button>
 
           <div className="swap-box">
             <label className="swap-box__label">To</label>
@@ -66,7 +77,11 @@ export const DegensPage = () => {
             </div>
           )}
 
-          <button className="btn btn--primary btn--full" disabled={!isConnected || !amount}>
+          <button
+            className="btn btn--primary btn--full"
+            disabled={!isConnected}
+            onClick={handleSwap}
+          >
             {isConnected ? 'Swap Tokens' : 'Connect Wallet to Swap'}
           </button>
         </div>
@@ -75,8 +90,17 @@ export const DegensPage = () => {
         <div className="widget">
           <div className="widget__header">
             <h3 className="widget__title">Liquidity Pools</h3>
-            <button className="btn btn--secondary" style={{ fontSize: '12px', padding: '6px 14px' }}>+ Add Liquidity</button>
+            <button
+              className="btn btn--secondary"
+              style={{ fontSize: '12px', padding: '6px 14px' }}
+              onClick={() => showPoolNotice('Liquidity pools coming soon')}
+            >
+              + Add Liquidity
+            </button>
           </div>
+          {poolNotice && (
+            <p className="status-msg status-msg--loading" style={{ marginBottom: 8 }}>{poolNotice}</p>
+          )}
           <div className="pool-list">
             {POOLS.map(p => (
               <div key={p.pair} className="pool-item">
@@ -88,7 +112,13 @@ export const DegensPage = () => {
                   <span className="pool-item__apr">{p.apr} APR</span>
                   <span className="pool-item__vol">Vol {p.vol}</span>
                 </div>
-                <button className="btn btn--secondary" style={{ fontSize: '12px', padding: '6px 12px' }}>Join</button>
+                <button
+                  className="btn btn--secondary"
+                  style={{ fontSize: '12px', padding: '6px 12px' }}
+                  onClick={() => showPoolNotice(`${p.pair} pool — coming soon`)}
+                >
+                  Join
+                </button>
               </div>
             ))}
           </div>
