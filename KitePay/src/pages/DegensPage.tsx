@@ -5,8 +5,9 @@ import type { Provider } from '@reown/appkit/react'
 import { LP_ADDRESS, LP_ABI } from '../abi/KiteLiquidityPool'
 import { KITE_TOKEN_ADDRESS, USDC_TOKEN_ADDRESS } from '../abi/KitePayToken'
 
-const APPROVE_ABI = [
+const TOKEN_ABI = [
   { inputs: [{ internalType: 'address', name: 'spender', type: 'address' }, { internalType: 'uint256', name: 'value', type: 'uint256' }], name: 'approve', outputs: [{ internalType: 'bool', name: '', type: 'bool' }], stateMutability: 'nonpayable', type: 'function' },
+  { inputs: [{ internalType: 'address', name: 'account', type: 'address' }], name: 'balanceOf', outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }], stateMutability: 'view', type: 'function' },
 ] as const
 
 const TOKENS = ['KITE', 'ETH', 'USDC', 'WBTC']
@@ -31,6 +32,8 @@ export const DegensPage = () => {
   const [userLp, setUserLp] = useState('0')
   const [userShareA, setUserShareA] = useState('0')
   const [userShareB, setUserShareB] = useState('0')
+  const [kiteBalance, setKiteBalance] = useState('0')
+  const [usdcBalance, setUsdcBalance] = useState('0')
   const [status, setStatus] = useState<TxStatus>('idle')
   const [msg, setMsg] = useState('')
   const [showLpForm, setShowLpForm] = useState(false)
@@ -52,6 +55,12 @@ export const DegensPage = () => {
         setUserLp(parseFloat(formatUnits(lpBal, 18)).toFixed(6))
         setUserShareA(parseFloat(formatUnits(sA, 18)).toFixed(4))
         setUserShareB(parseFloat(formatUnits(sB, 6)).toFixed(4))
+
+        const kite = new Contract(KITE_TOKEN_ADDRESS, TOKEN_ABI, provider)
+        const usdc = new Contract(USDC_TOKEN_ADDRESS, TOKEN_ABI, provider)
+        const [kb, ub] = await Promise.all([kite.balanceOf(address), usdc.balanceOf(address)])
+        setKiteBalance(parseFloat(formatUnits(kb, 18)).toFixed(4))
+        setUsdcBalance(parseFloat(formatUnits(ub, 6)).toFixed(2))
       }
     } catch { /* silent */ }
   }, [walletProvider, onKite, address])
@@ -59,19 +68,28 @@ export const DegensPage = () => {
   useEffect(() => { fetchPoolInfo() }, [fetchPoolInfo])
 
   const handleAddLiquidity = async () => {
-    if (!kiteAmt || !usdcAmt || !walletProvider) return
+    if (!kiteAmt || !usdcAmt || !walletProvider || !address) return
     try {
-      const provider = new BrowserProvider(walletProvider)
-      const signer = await provider.getSigner()
       const amtKite = parseUnits(kiteAmt, 18)
       const amtUsdc = parseUnits(usdcAmt, 6)
 
+      // Pre-flight balance checks
+      if (parseFloat(kiteAmt) > parseFloat(kiteBalance)) {
+        setStatus('error'); setMsg(`Insufficient KITE — you have ${kiteBalance} KITE`); return
+      }
+      if (parseFloat(usdcAmt) > parseFloat(usdcBalance)) {
+        setStatus('error'); setMsg(`Insufficient USDC — you have ${usdcBalance} USDC`); return
+      }
+
+      const provider = new BrowserProvider(walletProvider)
+      const signer = await provider.getSigner()
+
       setStatus('approving'); setMsg('Approving KITE…')
-      const kite = new Contract(KITE_TOKEN_ADDRESS, APPROVE_ABI, signer)
+      const kite = new Contract(KITE_TOKEN_ADDRESS, TOKEN_ABI, signer)
       await (await kite.approve(LP_ADDRESS, amtKite)).wait()
 
       setMsg('Approving USDC…')
-      const usdc = new Contract(USDC_TOKEN_ADDRESS, APPROVE_ABI, signer)
+      const usdc = new Contract(USDC_TOKEN_ADDRESS, TOKEN_ABI, signer)
       await (await usdc.approve(LP_ADDRESS, amtUsdc)).wait()
 
       setStatus('adding'); setMsg('Adding liquidity…')
@@ -83,7 +101,12 @@ export const DegensPage = () => {
       setKiteAmt(''); setUsdcAmt('')
       fetchPoolInfo()
     } catch (e: any) {
-      setStatus('error'); setMsg(e?.reason || e?.message || 'Add liquidity failed')
+      const raw: string = e?.data ?? e?.message ?? ''
+      if (raw.includes('e450d38c')) {
+        setStatus('error'); setMsg('Insufficient token balance — check your KITE and USDC balances')
+      } else {
+        setStatus('error'); setMsg(e?.reason || e?.shortMessage || e?.message || 'Add liquidity failed')
+      }
     }
   }
 
@@ -180,11 +203,17 @@ export const DegensPage = () => {
                 <p className={`status-msg status-msg--${status === 'error' ? 'error' : status === 'done' ? 'success' : 'loading'}`} style={{ marginBottom: 8 }}>{msg}</p>
               )}
               <div className="modal__field" style={{ marginBottom: 8 }}>
-                <label>KITE Amount</label>
+                <label style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>KITE Amount</span>
+                  {isConnected && onKite && <span style={{ color: '#9CA3AF', fontWeight: 400 }}>Balance: {kiteBalance}</span>}
+                </label>
                 <input className="input" type="number" placeholder="0.00" value={kiteAmt} onChange={e => setKiteAmt(e.target.value)} disabled={busy} />
               </div>
               <div className="modal__field" style={{ marginBottom: 10 }}>
-                <label>USDC Amount</label>
+                <label style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>USDC Amount</span>
+                  {isConnected && onKite && <span style={{ color: '#9CA3AF', fontWeight: 400 }}>Balance: {usdcBalance}</span>}
+                </label>
                 <input className="input" type="number" placeholder="0.00" value={usdcAmt} onChange={e => setUsdcAmt(e.target.value)} disabled={busy} />
               </div>
               <div className="btn-row">
