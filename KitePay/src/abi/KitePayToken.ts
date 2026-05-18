@@ -3,6 +3,10 @@
 
 export const KITE_TOKEN_ADDRESS = '0x0105FBf3EDF5297870066ef351E5ca6399b9FF8b'
 
+// USD stablecoins on Kite Testnet (chain 2368)
+export const USDC_TOKEN_ADDRESS = '0x0309764915AFC7a2a7CDd1E64c58a57c1F1705E3'
+export const USDT_TOKEN_ADDRESS = '0x0fF5393387ad2f9f691FD6Fd28e07E3969e27e63'
+
 export const KITE_TOKEN_ABI = [
   { inputs: [], stateMutability: 'nonpayable', type: 'constructor' },
 

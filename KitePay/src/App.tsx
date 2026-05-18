@@ -59,15 +59,23 @@ const NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string; highlight?: b
 function HomeDashboard({
   nativeBalance,
   kiteBalance,
+  usdcBalance,
+  usdtBalance,
   onGetBalance,
   onKiteBalance,
+  onUsdcBalance,
+  onUsdtBalance,
   onModal,
   address,
 }: {
   nativeBalance: string
   kiteBalance: string
+  usdcBalance: string
+  usdtBalance: string
   onGetBalance: () => void
   onKiteBalance: (b: string) => void
+  onUsdcBalance: (b: string) => void
+  onUsdtBalance: (b: string) => void
   onModal: (m: Modal) => void
   address: string | undefined
 }) {
@@ -75,7 +83,13 @@ function HomeDashboard({
   return (
     <main className="dashboard">
       <div className="dashboard__left">
-        <BalanceCard nativeBalance={nativeBalance} kiteBalance={kiteBalance} onGetBalance={onGetBalance} />
+        <BalanceCard
+          nativeBalance={nativeBalance}
+          kiteBalance={kiteBalance}
+          usdcBalance={usdcBalance}
+          usdtBalance={usdtBalance}
+          onGetBalance={onGetBalance}
+        />
         <QuickActions
           onSend={() => onModal('send')}
           onReceive={() => onModal('receive')}
@@ -85,7 +99,7 @@ function HomeDashboard({
         <PaymentsWidget />
       </div>
       <div className="dashboard__right">
-        <TokenWidget onKiteBalance={onKiteBalance} />
+        <TokenWidget onKiteBalance={onKiteBalance} onUsdcBalance={onUsdcBalance} onUsdtBalance={onUsdtBalance} />
         <div className="passport-card">
           <div className="passport-card__header">
             <img src="/logo.png" alt="" className="passport-card__logo" />
@@ -112,6 +126,8 @@ function Dashboard() {
   const [modal, setModal] = useState<Modal>(null)
   const [nativeBalance, setNativeBalance] = useState('')
   const [kiteBalance, setKiteBalance] = useState('')
+  const [usdcBalance, setUsdcBalance] = useState('')
+  const [usdtBalance, setUsdtBalance] = useState('')
 
   const { address } = useAppKitAccount()
   const { chainId } = useAppKitNetwork()
@@ -135,6 +151,8 @@ function Dashboard() {
     } else {
       setNativeBalance('')
       setKiteBalance('')
+      setUsdcBalance('')
+      setUsdtBalance('')
     }
   }, [address, chainId, walletProvider, handleGetBalance])
 
@@ -151,8 +169,12 @@ function Dashboard() {
         <HomeDashboard
           nativeBalance={nativeBalance}
           kiteBalance={kiteBalance}
+          usdcBalance={usdcBalance}
+          usdtBalance={usdtBalance}
           onGetBalance={handleGetBalance}
           onKiteBalance={setKiteBalance}
+          onUsdcBalance={setUsdcBalance}
+          onUsdtBalance={setUsdtBalance}
           onModal={setModal}
           address={address}
         />

@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react'
 
 interface BalanceCardProps {
   nativeBalance: string
   kiteBalance: string
+  usdcBalance: string
+  usdtBalance: string
   onGetBalance: () => void
 }
 
@@ -15,26 +18,58 @@ const toSvgPath = (pts: number[]) => {
   return xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')
 }
 
-export const BalanceCard = ({ nativeBalance, kiteBalance, onGetBalance }: BalanceCardProps) => {
+type BalanceView = 'KITE' | 'USDC' | 'USDT'
+
+const VIEW_COLORS: Record<BalanceView, string> = {
+  KITE: '#00C2D4',
+  USDC: '#2775CA',
+  USDT: '#26A17B',
+}
+
+export const BalanceCard = ({ nativeBalance, kiteBalance, usdcBalance, usdtBalance, onGetBalance }: BalanceCardProps) => {
   const { isConnected, address } = useAppKitAccount()
   const { chainId } = useAppKitNetwork()
+  const [view, setView] = useState<BalanceView>('KITE')
 
   const onKite = [2368, 2366].includes(Number(chainId))
-  const displayBalance = kiteBalance || nativeBalance || (isConnected ? '—' : '0.00')
-  const displayLabel = kiteBalance ? 'KITE' : onKite ? 'KITE' : 'ETH'
+
+  const displayBalance = (() => {
+    if (view === 'USDC') return usdcBalance || (isConnected ? '—' : '0.00')
+    if (view === 'USDT') return usdtBalance || (isConnected ? '—' : '0.00')
+    return kiteBalance || nativeBalance || (isConnected ? '—' : '0.00')
+  })()
+
+  const displayLabel = onKite ? view : view === 'KITE' ? 'ETH' : view
   const short = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''
+  const accentColor = VIEW_COLORS[view]
 
   return (
     <div className="balance-card">
       <div className="balance-card__top">
         <div>
           <p className="balance-card__label">Total Balance</p>
-          <h2 className="balance-card__amount">{displayBalance}</h2>
+          <h2 className="balance-card__amount" style={{ color: accentColor }}>{displayBalance}</h2>
           <span className="balance-card__unit">{displayLabel}</span>
         </div>
-        <div className="balance-card__badge">
-          <span className={`network-dot ${onKite ? 'network-dot--live' : ''}`} />
-          {onKite ? 'Kite Chain' : chainId ? `Chain ${chainId}` : 'Not connected'}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+          <div className="balance-card__badge">
+            <span className={`network-dot ${onKite ? 'network-dot--live' : ''}`} />
+            {onKite ? 'Kite Chain' : chainId ? `Chain ${chainId}` : 'Not connected'}
+          </div>
+          {onKite && isConnected && (
+            <div className="token-selector" style={{ gap: '4px' }}>
+              {(['KITE', 'USDC', 'USDT'] as BalanceView[]).map(t => (
+                <button
+                  key={t}
+                  className={`token-selector__btn ${view === t ? 'token-selector__btn--active' : ''}`}
+                  style={view === t ? { borderColor: VIEW_COLORS[t], color: VIEW_COLORS[t], padding: '2px 8px', fontSize: '11px' } : { padding: '2px 8px', fontSize: '11px' }}
+                  onClick={() => setView(t)}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
